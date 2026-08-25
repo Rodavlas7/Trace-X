@@ -229,11 +229,15 @@
                     <div class="mb-3">
                         <label class="form-label small fw-medium">Lote de componentes</label>
                         <select name="lote" class="form-select">
-                            <option value="">— Sin lote —</option>
+                            <option value="">— Que se genere solo —</option>
                             {% for l in lotes %}
                             <option value="{{ l.codigo }}">{{ l.codigo }}{% if l.descripcion %} — {{ l.descripcion }}{% endif %}</option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">
+                            Dejar vacio y se crea un lote por cada modelo de esta orden. Elige uno
+                            de la lista sólo si el proveedor mandó todo con su propio número de lote.
+                        </div>
                     </div>
 
                     <div class="alert bg-light border text-muted small mb-0 d-flex gap-2 align-items-start">

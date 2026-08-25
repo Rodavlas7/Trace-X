@@ -47,6 +47,7 @@ DROP TRIGGER IF EXISTS tg_Registrar_Embalaje;
 DROP TRIGGER IF EXISTS tg_Validar_Capacidad_Componente;
 DROP TRIGGER IF EXISTS tg_Validar_Capacidad_Componente_Cambio;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente;
+DROP TRIGGER IF EXISTS tg_Asignar_Lote_Componente;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente_Cambio;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material_Cambio;
@@ -923,6 +924,82 @@ BEGIN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Componente: ninguna estación de esa línea ensambla ese modelo de componente';
         END IF;
+
+    END IF;
+END$$
+
+
+-- ----------------------------------------------------------------------------
+-- tg_Asignar_Lote_Componente               BEFORE INSERT ON componente
+-- ----------------------------------------------------------------------------
+-- Que ninguna pieza que llega contra una orden se quede sin lote. Un lote es lo
+-- que llegó junto del proveedor, y lo que llega junto en una orden es todo lo
+-- de UN modelo: por eso el lote se arma por (modelo, orden), no uno para la
+-- orden entera. Un lote con procesadores y bisagras adentro no describe ninguna
+-- caja real; ése era justo el defecto de los viejos 'LCOMP-001' (AMD) y
+-- 'LCOMP-002' (Intel), que se repartían la planta en mitades.
+--
+-- No hay que agrupar ni contar nada: el código se DERIVA de (modelo, orden), así
+-- que las 30 piezas de un mismo modelo calculan el mismo código cada una por su
+-- cuenta y el INSERT IGNORE hace que sólo la primera lo cree. Por eso esto sí
+-- cabe en un trigger aunque se dispare fila por fila.
+--
+-- Se apoya en algo que ya está documentado en el trigger de arriba: InnoDB
+-- revisa las foráneas DESPUÉS de los BEFORE. Gracias a eso el lote alcanza a
+-- nacer aquí y FK_componente_lote lo encuentra cuando le toca revisar.
+--
+-- Va aparte y no dentro del trigger de validación de arriba, aunque compartan
+-- evento: aquél rechaza, éste rellena, y mezclarlos escondería una asignación
+-- dentro de algo que se llama "Validar". El encabezado de este archivo pide un
+-- trigger por (tabla, momento, evento) para que el orden no quede escondido;
+-- aquí no hay orden que esconder, porque ninguna de las validaciones mira
+-- `lote` ni este trigger mira lo que ellas revisan.
+--
+-- Dos casos que a propósito NO toca:
+--
+--   * `NEW.lote` ya viene lleno — alguien eligió uno a mano, o
+--     sp_Recibir_Orden_Material recibió el código impreso en la caja del
+--     proveedor. Ése manda y no se pisa.
+--   * `NEW.orden_material` en NULL — pieza suelta de almacén, sin llegada que
+--     la respalde. No hay orden de la cual derivar un lote.
+--
+-- Por eso el procedimiento no necesitó cambiar: su parámetro `loteComponentes`
+-- pasó de significar "usa éste o déjalas sin lote" a "usa éste o deja que se
+-- genere", que es mejor negocio — ya no hay forma de recibir material sin rastro.
+--
+-- SOBRE EL FORMATO, L<modelo>-<orden>
+-- ----------------------------------
+-- Distinto a propósito del LC-<modelo>-<NN> que usan los lotes de
+-- datos_pruebas2.sql. Si los dos empezaran igual, 'LC-MC010-3' (lote 3 semilla)
+-- y 'LC-MC010-3' (orden 3) serían el mismo texto para dos cosas distintas, y a
+-- ojo se confunden aunque no chocaran. Así, además, cabe hasta la orden 99999
+-- en el varchar(12) de lote_comp; con el prefijo largo el techo bajaba a 999.
+--
+-- Recepción parcial: una segunda entrega de la misma orden y el mismo modelo
+-- reusaría el lote de la primera, porque el código sólo depende de esos dos
+-- datos. Hoy da igual —sp_Recibir_Orden_Material completa la orden de un jalón—
+-- pero si algún día se reciben de a poco, ahí hay que meterle la fecha.
+
+CREATE TRIGGER tg_Asignar_Lote_Componente
+BEFORE INSERT ON componente
+FOR EACH ROW
+BEGIN
+    DECLARE codigo_lote VARCHAR(12);
+
+    IF NEW.lote           IS NULL
+       AND NEW.orden_material IS NOT NULL
+       AND NEW.modelo         IS NOT NULL
+    THEN
+
+        SET codigo_lote = CONCAT('L', NEW.modelo, '-', NEW.orden_material);
+
+        INSERT IGNORE INTO lote_comp (codigo, descripcion)
+        SELECT codigo_lote,
+               CONCAT(mc.nombre, ' - orden ', NEW.orden_material)
+          FROM modelo_componente mc
+         WHERE mc.codigo = NEW.modelo;
+
+        SET NEW.lote = codigo_lote;
 
     END IF;
 END$$
