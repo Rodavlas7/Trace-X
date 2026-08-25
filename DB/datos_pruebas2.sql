@@ -537,7 +537,7 @@ SELECT om.numero, mc.codigo, 30
                       WHEN 'TC005' THEN 'LIN004' WHEN 'TC009' THEN 'LIN004'
                       WHEN 'TC006' THEN 'LIN004' WHEN 'TC013' THEN 'LIN004'
                   END
- WHERE om.solicitud = '2026-08-04';
+ WHERE DATE(om.solicitud) = '2026-08-04';
 
 
 -- ============================================================================

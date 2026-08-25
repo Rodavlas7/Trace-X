@@ -435,6 +435,8 @@ CREATE UNIQUE INDEX IUK_usuario_empleado ON usuario(empleado);
 
 CREATE UNIQUE INDEX IUK_serie_laptop ON laptop(num_serie);
 
+CREATE UNIQUE INDEX IUK_estacion_compatibilidad_componente
+    ON estacion_compatibilidad_componente(estacion, modelo_componente);
 
 # Editar la PK de los empleados
 

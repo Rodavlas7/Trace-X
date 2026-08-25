@@ -423,7 +423,7 @@ BEGIN
     SELECT
         recepcion into recepcion_fecha
     from orden_material
-    where numero = 1;
+    where numero = numeroOrdenMaterial;
 
     IF recepcion_fecha is not NULL THEN
         SIGNAL SQLSTATE '45000'

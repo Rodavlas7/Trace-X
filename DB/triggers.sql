@@ -47,6 +47,9 @@ DROP TRIGGER IF EXISTS tg_Registrar_Embalaje;
 DROP TRIGGER IF EXISTS tg_Validar_Capacidad_Componente;
 DROP TRIGGER IF EXISTS tg_Validar_Capacidad_Componente_Cambio;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente;
+DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente_Cambio;
+DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material;
+DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material_Cambio;
 DROP TRIGGER IF EXISTS tg_Iniciar_Orden_Al_Registrar_Laptop;
 DROP TRIGGER IF EXISTS tg_Sincronizar_Cant_Producida_Alta;
 DROP TRIGGER IF EXISTS tg_Abrir_Ensamblaje_Primera_Linea;
@@ -825,7 +828,8 @@ BEGIN
 END$$
 
 -- ----------------------------------------------------------------------------
--- tg_Validar_Compatibilidad_Componente    BEFORE INSERT ON componente
+-- tg_Validar_Compatibilidad_Componente         BEFORE INSERT ON componente
+-- tg_Validar_Compatibilidad_Componente_Cambio  BEFORE UPDATE ON componente
 -- ----------------------------------------------------------------------------
 -- Que una pieza no entre al stock de una línea que no la ensambla. La
 -- compatibilidad no vive en la línea sino en sus estaciones
@@ -872,9 +876,11 @@ END$$
 -- Que la orden exista no se comprueba: eso sí lo corta FK_componente_orden_material,
 -- con un 1452 pelón, y sólo se alcanza mandando un número inventado por la API.
 --
--- Falta el gemelo BEFORE UPDATE: mover una pieza de línea —o reasignarle la
--- orden— con un UPDATE no pasa por aquí. El par
--- _Capacidad_/_Capacidad_Cambio de arriba es el molde.
+-- El gemelo BEFORE UPDATE va abajo. Sin él la regla se saltaba entera: mover
+-- una pieza de línea —o reasignarle la orden— con un UPDATE no pasaba por aquí,
+-- y ése no es un camino teórico, es ComponenteModifyAPIView
+-- (Servicios/componentes/views.py) con un PATCH a /componentes/mod/<numero>/,
+-- que expone `linea` y `modelo` como cualquier otro campo.
 
 CREATE TRIGGER tg_Validar_Compatibilidad_Componente
 BEFORE INSERT ON componente
@@ -915,6 +921,194 @@ BEGIN
         THEN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Componente: ninguna estación de esa línea ensambla ese modelo de componente';
+        END IF;
+
+    END IF;
+END$$
+
+
+-- Diferencias con el de arriba:
+--   1. Cada comprobación se despierta sólo si CAMBIÓ lo que vigila: el modelo
+--      para la primera, la orden para la segunda, la línea o el modelo para la
+--      tercera. El <=> compara tolerando nulos. Tocarle el estado, la
+--      descripción o el registro de ensamblaje no revalida nada, que es lo que
+--      hacen sp_Cancelar_Orden_Produccion, sp_Cancelar_Laptop y el checklist a
+--      cada rato; revalidar ahí sólo costaría consultas.
+--   2. Por lo mismo NO regulariza lo que ya está guardado. Una pieza que hoy
+--      viviera en una línea que no la ensambla se puede seguir editando por sus
+--      otras columnas; lo que se cierra es que un UPDATE la MUEVA a una
+--      combinación mala. Para lo viejo hace falta una limpieza de datos, no un
+--      trigger.
+--   3. La de la orden pide además que la orden CAMBIE. Que la pieza siga
+--      colgada de la misma orden ya sellada no es motivo para bloquear el
+--      UPDATE: es la vida normal de una pieza recibida.
+
+CREATE TRIGGER tg_Validar_Compatibilidad_Componente_Cambio
+BEFORE UPDATE ON componente
+FOR EACH ROW
+BEGIN
+
+    IF NOT (NEW.modelo <=> OLD.modelo)
+       AND NEW.modelo IS NOT NULL
+       AND NOT EXISTS (
+               SELECT 1
+                 FROM modelo_componente mc
+                WHERE mc.codigo = NEW.modelo)
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Componente_Cambio: ese modelo de componente no existe';
+    END IF;
+
+    IF NOT (NEW.orden_material <=> OLD.orden_material)
+       AND NEW.orden_material IS NOT NULL
+       AND EXISTS (
+               SELECT 1
+                 FROM orden_material om
+                WHERE om.numero    = NEW.orden_material
+                  AND om.recepcion IS NOT NULL)
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Componente_Cambio: esa orden ya se recibió, no admite más piezas';
+    END IF;
+
+    IF (NOT (NEW.linea <=> OLD.linea) OR NOT (NEW.modelo <=> OLD.modelo))
+       AND NEW.linea  IS NOT NULL
+       AND NEW.modelo IS NOT NULL
+    THEN
+
+        IF NOT EXISTS (
+                SELECT 1
+                  FROM estacion_compatibilidad_componente ecc
+                  JOIN estacion e ON e.codigo = ecc.estacion
+                 WHERE e.linea               = NEW.linea
+                   AND ecc.modelo_componente = NEW.modelo)
+        THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Componente_Cambio: ninguna estación de esa línea ensambla ese modelo';
+        END IF;
+
+    END IF;
+END$$
+
+
+
+-- ============================================================================
+-- D E T A L L E   D E   M A T E R I A L
+-- ============================================================================
+--
+-- La misma regla que los dos de arriba, un paso antes. Aquéllos vigilan la
+-- RECEPCIÓN —qué pieza entra al stock de la línea—; éstos vigilan la SOLICITUD
+-- —qué modelos se le pueden pedir a la orden—, que es donde se pidió que
+-- estuviera: de la orden de material de una línea sólo se puede solicitar
+-- material que esa línea ensamble.
+--
+-- Sin ellos la orden admitía cualquier modelo y el error salía hasta que
+-- llegaba el camión, en el peor momento posible: sp_Recibir_Orden_Material se
+-- frenaba a media captura, no daba de alta ni los renglones buenos, la orden se
+-- quedaba sin sellar —recepcion en NULL, o sea abierta para siempre— y el
+-- mensaje hablaba de un trigger sobre `componente` que el supervisor nunca
+-- tocó. Aquí el renglón malo se rechaza solo, cuando se está armando la orden,
+-- y los demás entran.
+--
+--   _Detalle_Material         BEFORE INSERT — se agrega un renglón.
+--   _Detalle_Material_Cambio  BEFORE UPDATE — se le cambia el modelo al renglón
+--                             o se le mueve a otra orden. Cambiar sólo la
+--                             cantidad no revalida nada.
+--
+-- La compatibilidad se mira contra `orden_material.linea` y no contra la
+-- estación: basta con que UNA estación de esa línea monte el modelo, igual que
+-- en el de componente.
+--
+-- Órdenes sin línea: la columna admite NULL y la orden se puede guardar antes
+-- de elegirla. Mientras no la tenga no hay contra qué comparar y los renglones
+-- pasan; de todos modos sp_Recibir_Orden_Material no la deja recibir así. Ese
+-- hueco se cierra con un NOT NULL en la columna, no con más lógica aquí.
+--
+-- Lo que a propósito NO cubren: cambiarle la línea a una orden que ya tiene
+-- renglones (UPDATE sobre orden_material) puede dejarlos incompatibles a todos
+-- de golpe. Eso es otra tabla y otro evento, y la decisión de qué hacer con los
+-- renglones ya escritos —rechazar el cambio o borrarlos— no es obvia.
+--
+-- Que la orden exista no se comprueba: eso lo corta FK_detalle_material_orden.
+-- Que el modelo exista sí, y por la misma razón que allá arriba: InnoDB revisa
+-- las foráneas DESPUÉS de los BEFORE, así que sin esa comprobación un modelo
+-- inventado nunca llega al 1452 y sale por 'esa línea no lo ensambla', que es
+-- verdad pero manda a buscar el problema al lado equivocado.
+
+CREATE TRIGGER tg_Validar_Compatibilidad_Detalle_Material
+BEFORE INSERT ON detalle_material
+FOR EACH ROW
+BEGIN
+    DECLARE linea_orden VARCHAR(8) DEFAULT NULL;
+
+    IF NOT EXISTS (
+           SELECT 1
+             FROM modelo_componente mc
+            WHERE mc.codigo = NEW.modelo)
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material: ese modelo de componente no existe';
+    END IF;
+
+    SELECT om.linea
+      INTO linea_orden
+      FROM orden_material om
+     WHERE om.numero = NEW.orden;
+
+    -- Orden todavía sin línea: no hay contra qué comparar.
+    IF linea_orden IS NOT NULL
+       AND NOT EXISTS (
+               SELECT 1
+                 FROM estacion_compatibilidad_componente ecc
+                 JOIN estacion e ON e.codigo = ecc.estacion
+                WHERE e.linea               = linea_orden
+                  AND ecc.modelo_componente = NEW.modelo)
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material: esa línea no ensambla ese modelo de componente';
+    END IF;
+END$$
+
+
+-- Diferencia con el de arriba: sólo se despierta si cambió el modelo o la
+-- orden, que es lo único que puede volver malo un renglón que ya estaba bien.
+-- Corregir la cantidad —el UPDATE de todos los días— no vuelve a consultar
+-- nada.
+
+CREATE TRIGGER tg_Validar_Compatibilidad_Detalle_Material_Cambio
+BEFORE UPDATE ON detalle_material
+FOR EACH ROW
+BEGIN
+    DECLARE linea_orden VARCHAR(8) DEFAULT NULL;
+
+    IF NOT (NEW.modelo <=> OLD.modelo)
+       OR NOT (NEW.orden  <=> OLD.orden)
+    THEN
+
+        IF NOT EXISTS (
+               SELECT 1
+                 FROM modelo_componente mc
+                WHERE mc.codigo = NEW.modelo)
+        THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material_Cambio: ese modelo no existe';
+        END IF;
+
+        SELECT om.linea
+          INTO linea_orden
+          FROM orden_material om
+         WHERE om.numero = NEW.orden;
+
+        IF linea_orden IS NOT NULL
+           AND NOT EXISTS (
+                   SELECT 1
+                     FROM estacion_compatibilidad_componente ecc
+                     JOIN estacion e ON e.codigo = ecc.estacion
+                    WHERE e.linea               = linea_orden
+                      AND ecc.modelo_componente = NEW.modelo)
+        THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material_Cambio: esa línea no ensambla ese modelo';
         END IF;
 
     END IF;
