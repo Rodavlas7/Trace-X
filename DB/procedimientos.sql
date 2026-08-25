@@ -400,13 +400,14 @@ CREATE PROCEDURE sp_Recibir_Orden_Material(
 )
 BEGIN
     DECLARE linea_orden        VARCHAR(8);
-    DECLARE recepcion_fecha    DATE DEFAULT NULL;
+    DECLARE recepcion_fecha    DATETIME DEFAULT NULL;
     DECLARE orden_existe       INT;
     DECLARE lote_existe        INT;
     DECLARE total_materiales   INT DEFAULT 0;
     DECLARE total_faltantes    INT DEFAULT 0;
     DECLARE total_previos      INT DEFAULT 0;
     DECLARE total_creados      INT DEFAULT 0;
+    DECLARE total_pendientes   INT DEFAULT 0;
 
     -- Validaciones
 
@@ -526,16 +527,29 @@ BEGIN
 
     SET total_creados = ROW_COUNT();
 
-    update orden_material
-       set recepcion = CURDATE()
-     where numero = numeroOrdenMaterial;
+    SELECT IFNULL(SUM(GREATEST(IFNULL(dm.cantidad, 0) - IFNULL(recibido.piezas, 0), 0)), 0)
+      INTO total_pendientes
+      FROM detalle_material dm
+      LEFT JOIN (SELECT modelo, COUNT(*) AS piezas
+                   FROM componente
+                  WHERE orden_material = numeroOrdenMaterial
+                  GROUP BY modelo) AS recibido
+             ON recibido.modelo = dm.modelo
+     WHERE dm.orden = numeroOrdenMaterial;
+
+    IF total_pendientes = 0 THEN
+        UPDATE orden_material
+           SET recepcion = NOW()
+         WHERE numero = numeroOrdenMaterial;
+    END IF;
 
     SELECT numeroOrdenMaterial AS orden,
            linea_orden         AS linea,
            loteComponentes     AS lote,
            total_materiales    AS materiales,
            total_creados       AS componentes_creados,
-           total_previos       AS componentes_previos;
+           total_previos       AS componentes_previos,
+           total_pendientes    AS componentes_pendientes;
 END$$
 
 

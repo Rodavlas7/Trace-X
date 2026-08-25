@@ -50,6 +50,7 @@ DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Componente_Cambio;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material;
 DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material_Cambio;
+DROP TRIGGER IF EXISTS tg_Validar_Compatibilidad_Detalle_Material_Baja;
 DROP TRIGGER IF EXISTS tg_Iniciar_Orden_Al_Registrar_Laptop;
 DROP TRIGGER IF EXISTS tg_Sincronizar_Cant_Producida_Alta;
 DROP TRIGGER IF EXISTS tg_Abrir_Ensamblaje_Primera_Linea;
@@ -1010,10 +1011,22 @@ END$$
 -- tocó. Aquí el renglón malo se rechaza solo, cuando se está armando la orden,
 -- y los demás entran.
 --
---   _Detalle_Material         BEFORE INSERT — se agrega un renglón.
---   _Detalle_Material_Cambio  BEFORE UPDATE — se le cambia el modelo al renglón
+--   _Detalle_Material         BEFORE INSERT — se le agrega un material.
+--   _Detalle_Material_Cambio  BEFORE UPDATE — se le cambia el modelo al material
 --                             o se le mueve a otra orden. Cambiar sólo la
---                             cantidad no revalida nada.
+--                             cantidad no revalida la compatibilidad.
+--
+-- Los dos revisan además que la orden siga ABIERTA. `recepcion` en NULL es
+-- abierta; en cuanto sp_Recibir_Orden_Material la sella —lo hace sólo cuando la
+-- orden quedó completa— la orden ya no admite materiales nuevos ni cambios en
+-- los que tiene. Sin esto se le podían seguir colgando materiales a una orden
+-- ya recibida, que nadie iba a surtir nunca, o subirle la cantidad a los que ya
+-- tenía y dejar el 'recibido completo' mintiendo. Es la misma regla que la
+-- segunda comprobación de tg_Validar_Compatibilidad_Componente, del otro lado:
+-- allá cierra el paso a las piezas, aquí a lo que se pide.
+--
+--   _Detalle_Material_Baja    BEFORE DELETE — se quita un material de la orden.
+--                             Lo corta si de ese material ya llegaron piezas.
 --
 -- La compatibilidad se mira contra `orden_material.linea` y no contra la
 -- estación: basta con que UNA estación de esa línea monte el modelo, igual que
@@ -1039,7 +1052,8 @@ CREATE TRIGGER tg_Validar_Compatibilidad_Detalle_Material
 BEFORE INSERT ON detalle_material
 FOR EACH ROW
 BEGIN
-    DECLARE linea_orden VARCHAR(8) DEFAULT NULL;
+    DECLARE linea_orden     VARCHAR(8) DEFAULT NULL;
+    DECLARE recepcion_orden DATETIME   DEFAULT NULL;
 
     IF NOT EXISTS (
            SELECT 1
@@ -1050,10 +1064,16 @@ BEGIN
             SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material: ese modelo de componente no existe';
     END IF;
 
-    SELECT om.linea
-      INTO linea_orden
+    -- Las dos cosas que hay que saber de la orden, en una sola consulta.
+    SELECT om.linea, om.recepcion
+      INTO linea_orden, recepcion_orden
       FROM orden_material om
      WHERE om.numero = NEW.orden;
+
+    IF recepcion_orden IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material: esa orden ya se recibió, no admite más materiales';
+    END IF;
 
     -- Orden todavía sin línea: no hay contra qué comparar.
     IF linea_orden IS NOT NULL
@@ -1079,7 +1099,24 @@ CREATE TRIGGER tg_Validar_Compatibilidad_Detalle_Material_Cambio
 BEFORE UPDATE ON detalle_material
 FOR EACH ROW
 BEGIN
-    DECLARE linea_orden VARCHAR(8) DEFAULT NULL;
+    DECLARE linea_orden     VARCHAR(8) DEFAULT NULL;
+    DECLARE recepcion_orden DATETIME   DEFAULT NULL;
+
+    -- Una orden recibida está cerrada, y eso se mira en CUALQUIER update, no
+    -- sólo cuando cambia el modelo: subirle la cantidad a un material de una
+    -- orden ya sellada es pedir más material por la puerta de atrás, y deja el
+    -- 'recibido completo' mintiendo. Se miran las dos órdenes, la de antes y la
+    -- de después, para que tampoco se pueda sacar un material de una orden
+    -- cerrada ni meterlo a otra.
+    SELECT MAX(om.recepcion)
+      INTO recepcion_orden
+      FROM orden_material om
+     WHERE om.numero IN (NEW.orden, OLD.orden);
+
+    IF recepcion_orden IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material_Cambio: esa orden ya se recibió';
+    END IF;
 
     IF NOT (NEW.modelo <=> OLD.modelo)
        OR NOT (NEW.orden  <=> OLD.orden)
@@ -1112,6 +1149,43 @@ BEGIN
         END IF;
 
     END IF;
+END$$
+
+
+-- El de baja no mira la fecha de recepción de la orden, mira las PIEZAS: si de
+-- ese material con esa orden ya llegó aunque sea una, el renglón no se puede
+-- quitar. Es a propósito más fino que 'la orden ya se recibió':
+--
+--   * Una orden puede tener piezas encima sin estar sellada todavía —recepción
+--     parcial, o piezas capturadas a mano desde el formulario de componente—.
+--     Ahí borrar el material también deja piezas huérfanas, y mirar sólo
+--     `recepcion` lo dejaría pasar.
+--   * Al revés, en una orden con varios materiales puede haber llegado uno y
+--     otro no. El que no llegó sí se puede quitar; corregir una orden a la que
+--     todavía no le surten un modelo es trabajo normal, no un error.
+--
+-- Lo que se evita es dejar componentes en el inventario apuntando a un renglón
+-- que ya no existe: la orden diría que nunca pidió ese modelo y el almacén
+-- tendría las piezas.
+--
+-- Para quitarlo de todos modos hay que dar de baja primero las piezas, que es
+-- justo la decisión que alguien tiene que tomar a conciencia.
+
+CREATE TRIGGER tg_Validar_Compatibilidad_Detalle_Material_Baja
+BEFORE DELETE ON detalle_material
+FOR EACH ROW
+BEGIN
+
+    IF EXISTS (
+           SELECT 1
+             FROM componente c
+            WHERE c.orden_material = OLD.orden
+              AND c.modelo         = OLD.modelo)
+    THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Error tg_Validar_Compatibilidad_Detalle_Material_Baja: ese material ya tiene piezas recibidas';
+    END IF;
+
 END$$
 
 

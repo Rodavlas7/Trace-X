@@ -352,11 +352,11 @@ INSERT INTO registro_embalaje (fecha, hora, laptop, tipo) VALUES
 --  modelo_componente, que son piezas de ensamblaje. Cajas y empaque salen de
 --  tipo_embalaje, que es otro catálogo y no cuelga de aquí.
 -- ============================================================
-INSERT INTO orden_material (solicitud, linea) VALUES
-('2026-07-21 07:30:00', 'LIN001'),   -- numero 1 — Línea A
-('2026-07-21 07:45:00', 'LIN002'),   -- numero 2 — Línea B
-('2026-07-21 08:00:00', 'LIN003'),   -- numero 3 — Línea C
-('2026-07-21 08:15:00', 'LIN004');   -- numero 4 — Línea D
+INSERT INTO orden_material (solicitud, necesitada, linea) VALUES
+('2026-07-21 07:30:00', '2026-07-23 07:00:00', 'LIN001'),   -- numero 1 — Línea A
+('2026-07-21 07:45:00', '2026-07-23 07:00:00', 'LIN002'),   -- numero 2 — Línea B
+('2026-07-21 08:00:00', '2026-07-23 14:00:00', 'LIN003'),   -- numero 3 — Línea C
+('2026-07-21 08:15:00', '2026-07-23 14:00:00', 'LIN004');   -- numero 4 — Línea D
 
 -- Orden 1 · Línea A: chasis superior, touchpad, teclado, altavoces, conector
 INSERT INTO detalle_material (orden, modelo, cantidad) VALUES
