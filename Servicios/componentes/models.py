@@ -1,5 +1,5 @@
 from django.db import models
-from lineas.models import Linea
+from lineas.models import Estacion, Linea
 # Create your models here.
 
  
@@ -9,6 +9,7 @@ from lineas.models import Linea
 │    LoteComp
 │    ModeloComponente
 │    ModeloLaptopComponente  (tabla puente M a M: qué componentes lleva un modelo de laptop)
+│    EstacionCompatibilidadComponente  (tabla puente M a M: qué componentes sabe montar una estación)
 │    OrdenMaterial
 │    DetalleMaterial
 │    Componente
@@ -77,11 +78,36 @@ class ModeloLaptopComponente(models.Model):
         db_table = 'modelo_laptop_componente'
 
 
+# ESTACIONCOMPATIBILIDADCOMPONENTE — qué modelos de componente sabe montar cada
+# estación. Es el catálogo con el que los triggers de DB/triggers.sql deciden si
+# una línea puede pedir un material: basta con que UNA de sus estaciones lo
+# ensamble.
+#
+# No confundir con ModeloLaptopComponente, que es el BOM —qué piezas lleva una
+# laptop—. Ésta es la capacidad de la planta: qué sabe armar cada estación. Una
+# pieza puede estar en el BOM de un modelo y aun así no tocarle a una línea.
+class EstacionCompatibilidadComponente(models.Model):
+    numero = models.AutoField(primary_key=True)
+    estacion = models.ForeignKey(Estacion, models.DO_NOTHING, db_column='estacion')
+    modelo_componente = models.ForeignKey(ModeloComponente, models.DO_NOTHING, db_column='modelo_componente')
+
+    class Meta:
+        managed = False
+        db_table = 'estacion_compatibilidad_componente'
+
+
 # ORDENMATERIAL
 class OrdenMaterial(models.Model):
+    # Las tres fechas son DATETIME en la base y cada una la escribe alguien
+    # distinto:
+    #   solicitud   la pone el sistema al crear la orden (no se captura)
+    #   necesitada  la captura quien pide el material: para cuándo lo requiere
+    #   recepcion   la sella sp_Recibir_Orden_Material cuando la orden queda
+    #               completa; en NULL la orden sigue abierta
     numero = models.AutoField(primary_key=True)
-    fecha = models.DateField(blank=True, null=True)
-    hora = models.TimeField(blank=True, null=True)
+    solicitud = models.DateTimeField(blank=True, null=True)
+    necesitada = models.DateTimeField(blank=True, null=True)
+    recepcion = models.DateTimeField(blank=True, null=True)
     linea = models.ForeignKey(Linea, models.DO_NOTHING, db_column='linea', blank=True, null=True)
  
     class Meta:

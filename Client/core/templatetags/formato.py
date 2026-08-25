@@ -1,12 +1,13 @@
 
 
+import re
 from datetime import date, datetime, time
 
 from django import template
 
 register = template.Library()
 
-FORMATO_FECHA = '%d-%m-%Y'
+FORMATO_FECHA = '%d/%m/%Y'
 FORMATO_HORA = '%H:%M:%S'
 
 # Formas en las que puede llegar una fecha desde la API.
@@ -15,6 +16,11 @@ PATRONES_FECHA = ('%Y-%m-%d', '%d-%m-%Y', '%Y/%m/%d', '%d/%m/%Y')
 # Idem para la hora. DRF manda HH:MM:SS, pero un <input type="time"> manda HH:MM
 # y los microsegundos aparecen cuando el valor viene de un DateTimeField.
 PATRONES_HORA = ('%H:%M:%S.%f', '%H:%M:%S', '%H:%M')
+
+# La zona horaria pegada al final de un DateTimeField con USE_TZ:
+# '2026-07-21T07:30:00-07:00' deja '07:30:00-07:00' al recortar la fecha, y
+# ninguno de los patrones de arriba se la come.
+ZONA_HORARIA = re.compile(r'(?:Z|[+-]\d{2}:?\d{2})$')
 
 
 def _a_fecha(valor):
@@ -54,6 +60,10 @@ def _a_hora(valor):
     if 'T' in texto or ' ' in texto:
         texto = texto.replace('T', ' ').split(' ')[-1]
 
+    # Sin esto, un '07:30:00-07:00' no casaba con ningún patrón y la hora salía
+    # en pantalla como el datetime crudo completo.
+    texto = ZONA_HORARIA.sub('', texto)
+
     for patron in PATRONES_HORA:
         try:
             return datetime.strptime(texto, patron).time()
@@ -64,10 +74,10 @@ def _a_hora(valor):
 
 @register.filter
 def fecha(valor):
-    """Fecha en DD-MM-AAAA.
+    """Fecha en DD/MM/AAAA.
 
     >>> fecha('2026-07-21')
-    '21-07-2026'
+    '21/07/2026'
     """
     if valor in (None, ''):
         return ''
@@ -90,7 +100,7 @@ def hora(valor):
 
 @register.filter
 def fecha_hora(valor, hora_valor=None):
-    """Fecha y hora juntas en DD-MM-AAAA HH:MM:SS.
+    """Fecha y hora juntas en DD/MM/AAAA HH:MM:SS.
 
     Se usa con la hora como argumento, porque la API las manda en dos campos:
 
@@ -100,7 +110,7 @@ def fecha_hora(valor, hora_valor=None):
     lo mismo "no se registró la hora" que "pasó a medianoche".
 
     >>> fecha_hora('2026-07-21', '08:00:00')
-    '21-07-2026 08:00:00'
+    '21/07/2026 08:00:00'
     """
     if valor in (None, '') and hora_valor in (None, ''):
         return ''

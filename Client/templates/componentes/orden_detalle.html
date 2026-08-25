@@ -1,4 +1,5 @@
 {% extends 'panel_admin/base.html' %}
+{% load formato %}
 
 {% block topbar_titulo %}Materiales{% endblock %}
 
@@ -31,11 +32,19 @@
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-white border shadow-sm px-3 d-flex align-items-center gap-2"
                         data-bs-toggle="modal" data-bs-target="#modalRecibir"
-                        {% if not orden.detalles %}disabled title="Primero agrega renglones"{% endif %}>
+                        {% if orden.recepcion %}disabled title="Esta orden ya se recibió completa"
+                        {% elif not orden.detalles %}disabled title="Primero agrega materiales"{% endif %}>
                     <i class="bi bi-box-arrow-in-down"></i> Recibir material
                 </button>
-                <button type="button" class="btn btn-accent shadow-sm px-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalCrear">
-                    <i class="bi bi-plus-lg"></i> Agregar renglón
+                {% comment %}
+                   Una orden recibida está cerrada: ya no admite materiales nuevos.
+                   El trigger de detalle_material lo corta de todos modos; esto sólo
+                   evita que el botón prometa algo que va a fallar.
+                {% endcomment %}
+                <button type="button" class="btn btn-accent shadow-sm px-3 d-flex align-items-center gap-2"
+                        data-bs-toggle="modal" data-bs-target="#modalCrear"
+                        {% if orden.recepcion %}disabled title="Esta orden ya se recibió, no admite más materiales"{% endif %}>
+                    <i class="bi bi-plus-lg"></i> Agregar material
                 </button>
             </div>
         </div>
@@ -43,19 +52,29 @@
         <!-- DATOS DE LA ORDEN -->
         <div class="emp-toolbar px-4 py-3 border-top">
             <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Fecha</div>
+                <div class="col-md-3">
+                    <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Solicitada</div>
                     <div class="text-dark fw-semibold d-flex align-items-center gap-2">
-                        <i class="bi bi-calendar3 text-secondary"></i> {% if orden.fecha %}{{ orden.fecha|slice:"8:10" }}-{{ orden.fecha|slice:"5:7" }}-{{ orden.fecha|slice:"0:4" }}{% else %}—{% endif %}
+                        <i class="bi bi-calendar3 text-secondary"></i> {{ orden.solicitud|fecha_hora:orden.solicitud|default:"—" }}
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Hora</div>
+                <div class="col-md-3">
+                    <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Se necesita</div>
                     <div class="text-dark fw-semibold d-flex align-items-center gap-2">
-                        <i class="bi bi-clock text-secondary"></i> {{ orden.hora|default:"—" }}
+                        <i class="bi bi-alarm text-secondary"></i> {{ orden.necesitada|fecha_hora:orden.necesitada|default:"—" }}
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Recepción</div>
+                    <div class="text-dark fw-semibold d-flex align-items-center gap-2">
+                        {% if orden.recepcion %}
+                            <i class="bi bi-check-circle-fill text-success"></i> {{ orden.recepcion|fecha_hora:orden.recepcion }}
+                        {% else %}
+                            <i class="bi bi-hourglass-split text-secondary"></i> <span class="text-muted">Sin recibir</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Línea</div>
                     <div class="text-dark fw-semibold d-flex align-items-center gap-2">
                         <i class="bi bi-diagram-3 text-secondary"></i> {{ orden.linea_nombre|default:orden.linea|default:"—" }}
@@ -66,7 +85,7 @@
     </div>
 
     <!-- ==========================================
-         TARJETA 2: RENGLONES
+         TARJETA 2: MATERIALES
          ========================================== -->
     <div class="emp-card overflow-hidden">
         <div class="table-responsive">
@@ -97,9 +116,10 @@
                         </td>
                         <td class="pe-4 text-end">
                             <div class="emp-actions d-inline-flex gap-1 align-items-center">
-                                <form method="POST" action="{% url 'renglon-eliminar' orden.numero d.modelo %}" class="d-inline" data-confirm="¿Eliminar este renglón?">
+                                <form method="POST" action="{% url 'material-eliminar' orden.numero d.modelo %}" class="d-inline" data-confirm="¿Eliminar este material?">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn text-danger" title="Eliminar renglón">
+                                    <button type="submit" class="btn text-danger" title="Eliminar material"
+                                            {% if orden.recepcion %}disabled title="Esta orden ya se recibió"{% endif %}>
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -110,7 +130,7 @@
                     <tr>
                         <td colspan="3" class="text-center text-muted py-5">
                             <i class="bi bi-list-ul text-light d-block mb-2" style="font-size: 2.5rem;"></i>
-                            Esta orden todavía no tiene renglones.
+                            Esta orden todavía no tiene materiales.
                         </td>
                     </tr>
                     {% endfor %}
@@ -122,7 +142,7 @@
 </div>
 
 <!-- ==========================================
-     MODAL: AGREGAR RENGLÓN
+     MODAL: AGREGAR MATERIAL
      ========================================== -->
 <div class="modal fade" id="modalCrear" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -130,18 +150,37 @@
             {% csrf_token %}
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold">Agregar renglón</h5>
+                    <h5 class="modal-title fw-bold">Agregar material</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label small fw-medium">Modelo de componente <span class="text-danger">*</span></label>
-                        <select name="modelo" class="form-select" required>
+                        <select name="modelo" class="form-select" required {% if not disponibles %}disabled{% endif %}>
                             <option value="">— Selecciona —</option>
-                            {% for m in modelos %}
+                            {% for m in disponibles %}
                             <option value="{{ m.codigo }}">{{ m.codigo }} — {{ m.nombre }}</option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">
+                            {% if not compatibles %}
+                                {{ orden.linea_nombre|default:orden.linea|default:"Esta línea" }} no tiene
+                                ningún material asignado en el catálogo de compatibilidad, así que no se le
+                                puede pedir nada.
+                            {% elif not disponibles %}
+                                Esta orden ya pide todos los materiales que
+                                {{ orden.linea_nombre|default:orden.linea }} ensambla. Para cambiar
+                                una cantidad, quita el material de la lista y vuelve a agregarlo.
+                            {% elif not orden.linea %}
+                                Esta orden todavía no tiene línea, así que aparece el catálogo completo
+                                menos lo que ya pide. En cuanto se le asigne una, sólo se le podrá pedir
+                                lo que ésa ensamble.
+                            {% else %}
+                                Sólo aparecen los materiales que
+                                {{ orden.linea_nombre|default:orden.linea }} sabe ensamblar
+                                y que esta orden todavía no pide.
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-medium">Cantidad <span class="text-danger">*</span></label>
@@ -151,14 +190,15 @@
                     <div class="alert bg-light border text-muted small mb-0 d-flex gap-2 align-items-start mt-4">
                         <i class="bi bi-info-circle-fill text-primary mt-1"></i>
                         <div>
-                            Cada modelo aparece una sola vez por orden. Si ya está en la lista,
-                            elimina el renglón y vuelve a agregarlo con la cantidad correcta.
+                            Cada modelo aparece una sola vez por orden, por eso los que ya están
+                            en la lista no salen aquí. Para corregirle la cantidad a uno, quítalo y
+                            vuelve a agregarlo —siempre que todavía no hayan llegado piezas de él.
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 bg-light">
                     <button type="button" class="btn btn-white border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent shadow-sm">Guardar renglón</button>
+                    <button type="submit" class="btn btn-accent shadow-sm">Guardar material</button>
                 </div>
             </div>
         </form>
@@ -180,7 +220,7 @@
                 <div class="modal-body">
 
                     <p class="text-muted small">
-                        Da de alta las piezas de cada renglón y las deja disponibles en
+                        Da de alta las piezas de cada material y las deja disponibles en
                         {{ orden.linea_nombre|default:orden.linea|default:"la línea de la orden" }}.
                         Se van a crear las que <strong>falten</strong> para llegar a la
                         cantidad pedida:

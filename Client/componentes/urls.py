@@ -22,6 +22,6 @@ urlpatterns = [
     path('ordenes/editar/<int:numero>/', views.ordenEditarView, name='orden-editar'),
     path('ordenes/eliminar/<int:numero>/', views.ordenEliminarView, name='orden-eliminar'),
     path('ordenes/<int:numero>/', views.ordenDetalleView, name='orden-detalle'),
-    path('ordenes/<int:numero>/renglon/eliminar/<str:modelo>/', views.renglonEliminarView, name='renglon-eliminar'),
+    path('ordenes/<int:numero>/material/eliminar/<str:modelo>/', views.materialEliminarView, name='material-eliminar'),
     path('ordenes/<int:numero>/recibir/', views.ordenRecibirView, name='orden-recibir'),
 ]

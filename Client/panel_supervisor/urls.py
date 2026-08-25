@@ -74,7 +74,7 @@ urlpatterns = [
     path('componentes/ordenes/editar/<int:numero>/', views_componentes.ordenEditarView, name='orden-editar'),
     path('componentes/ordenes/eliminar/<int:numero>/', views_componentes.ordenEliminarView, name='orden-eliminar'),
     path('componentes/ordenes/<int:numero>/', views_componentes.ordenDetalleView, name='orden-detalle'),
-    path('componentes/ordenes/<int:numero>/renglon/eliminar/<str:modelo>/', views_componentes.renglonEliminarView, name='renglon-eliminar'),
+    path('componentes/ordenes/<int:numero>/material/eliminar/<str:modelo>/', views_componentes.materialEliminarView, name='material-eliminar'),
     path('componentes/ordenes/<int:numero>/recibir/', views_componentes.ordenRecibirView, name='orden-recibir'),
 
     # ------------------------------------------------------------------

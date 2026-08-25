@@ -165,6 +165,51 @@ class ModeloLaptopComponenteModifyAPIView(ErroresDeBaseMixin, generics.RetrieveU
 
 
 
+class ModelosCompatiblesLineaAPIView(generics.ListAPIView):
+    """Qué modelos de componente puede pedir una línea.
+
+    Se filtra con ?linea=LIN001. Devuelve ModeloComponente —la misma forma que
+    /componentes/modelos/— para que el formulario de la orden pueda cambiar una
+    lista por la otra sin tocar nada más.
+
+    Sale de estacion_compatibilidad_componente, el mismo catálogo que usan los
+    triggers para rechazar un material que la línea no ensambla. Que salgan de
+    la misma fuente es el punto: hasta ahora el combo ofrecía los 31 modelos y
+    la base rechazaba la mayoría, así que el error se descubría al guardar.
+
+    DISTINTAS estaciones de una línea pueden montar el mismo modelo (LIN004
+    tiene 10 filas para 7 modelos), de ahí el __in contra la subconsulta en vez
+    de un JOIN: así el modelo sale una sola vez.
+
+    Sin ?linea devuelve el catálogo completo, que es lo correcto para una orden
+    que todavía no tiene línea: ahí el trigger tampoco compara contra nada.
+
+    OJO, no es lo mismo que /componentes/compatibilidad/, que es el BOM
+    (modelo_laptop_componente): qué piezas lleva una laptop, no qué piezas sabe
+    montar una línea.
+    """
+
+    permission_classes = [
+            IsAuthenticated,
+            TienePermisoModulo
+        ]
+    modulo = "orden_material"
+    serializer_class = ModeloComponenteSerializer
+
+    def get_queryset(self):
+        modelos = ModeloComponente.objects.all()
+        linea = self.request.query_params.get('linea')
+
+        if linea:
+            modelos = modelos.filter(
+                codigo__in=EstacionCompatibilidadComponente.objects
+                            .filter(estacion__linea=linea)
+                            .values('modelo_componente')
+            )
+
+        return modelos.order_by('codigo')
+
+
 # Vistas de ORDEN_MATERIAL / DETALLE_MATERIAL
 
  
@@ -179,7 +224,7 @@ class OrdenMaterialListCreateAPIView(ErroresDeBaseMixin, generics.ListCreateAPIV
  
  
 class OrdenMaterialDetailAPIView(generics.RetrieveAPIView):
-    """GET: detalle de la orden de material con sus renglones (detalle_material) anidados."""
+    """GET: detalle de la orden de material con sus materiales (detalle_material) anidados."""
     permission_classes = [
                 IsAuthenticated,
                 TienePermisoModulo
@@ -202,8 +247,8 @@ class OrdenMaterialModifyAPIView(ErroresDeBaseMixin, generics.RetrieveUpdateDest
  
  
 class DetalleMaterialListCreateAPIView(ErroresDeBaseMixin, generics.ListCreateAPIView):
-    """GET: todos los renglones. Filtra por orden con ?orden=<numero>.
-    POST: agrega un renglón (modelo + cantidad) a una orden de material."""
+    """GET: todos los materiales. Filtra por orden con ?orden=<numero>.
+    POST: agrega un material (modelo + cantidad) a una orden de material."""
     permission_classes = [
                 IsAuthenticated,
                 TienePermisoModulo
@@ -220,7 +265,7 @@ class DetalleMaterialListCreateAPIView(ErroresDeBaseMixin, generics.ListCreateAP
  
  
 class DetalleMaterialModifyAPIView(ErroresDeBaseMixin, generics.RetrieveUpdateDestroyAPIView):
-    """PUT/PATCH modifican la cantidad; DELETE borra el renglón.
+    """PUT/PATCH modifican la cantidad; DELETE borra el material.
     Se direcciona por la llave compuesta (orden, modelo), ya que la tabla
     detalle_material no tiene un id simple."""
     permission_classes = [
@@ -245,7 +290,7 @@ class DetalleMaterialModifyAPIView(ErroresDeBaseMixin, generics.RetrieveUpdateDe
 # ==================================================
 #
 # Recibir una orden de material no es CRUD sobre una tabla: son N altas de
-# componente derivadas de sus renglones, y tienen que pasar o no pasar
+# componente derivadas de sus materiales, y tienen que pasar o no pasar
 # completas. Lo resuelve la base con un procedimiento (DB/procedimientos.sql) y
 # aquí sólo se dispara la llamada. La clase base vive en api/views.py.
 
@@ -253,7 +298,7 @@ class DetalleMaterialModifyAPIView(ErroresDeBaseMixin, generics.RetrieveUpdateDe
 class RecibirOrdenMaterialAPIView(AccionDeProcedimientoAPIView):
     """Da de alta las piezas que le faltan a la orden de material.
 
-    Por cada renglón crea los componentes que falten para llegar a la cantidad
+    Por cada material crea los componentes que falten para llegar a la cantidad
     pedida y los deja Disponibles en la línea de la orden. Admite recepción
     parcial: se puede llamar otra vez cuando el proveedor complete.
 

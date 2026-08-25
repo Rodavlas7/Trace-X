@@ -443,6 +443,27 @@ def loteEliminarView(request, codigo):
 
 #  ORDENES DE MATERIAL
 
+def _necesitada(request):
+    """Junta los dos campos del formulario en el DATETIME que espera la API.
+
+    Se capturan por separado —<input type="date"> y <input type="time">— y no
+    con un solo datetime-local porque el selector de ése nada más abre el
+    calendario: la hora hay que teclearla a mano. Dos campos dan los dos menús.
+
+    Sin fecha no hay nada que mandar y va None: la columna admite NULL. Si viene
+    la fecha pero no la hora se asume el arranque del día, que es lo que
+    entiende cualquiera al escribir sólo un día.
+    """
+    fecha = request.POST.get("necesitada_fecha")
+    hora = request.POST.get("necesitada_hora")
+
+    if not fecha:
+        return None
+
+    return f"{fecha}T{hora or '00:00'}"
+
+
+
 @requiere_rol(ROL_SUPERVISOR)
 def ordenesListView(request):
 
@@ -457,9 +478,10 @@ def ordenesListView(request):
         if not linea:
             return redirect('panel_supervisor:ordenes-lista')
 
+        # 'solicitud' no se manda: la sella la API con la hora del servidor.
+        # 'recepcion' tampoco: la escribe el procedimiento al recibir.
         payload = {
-            "fecha": request.POST.get("fecha") or None,
-            "hora": request.POST.get("hora") or None,
+            "necesitada": _necesitada(request),
             # La línea no se captura: la orden es para surtir la suya.
             "linea": linea,
         }
@@ -479,15 +501,16 @@ def ordenesListView(request):
 
     ordenes = _solo_de(lista(respuesta_ordenes), "linea", linea)
 
-    # Cuántos renglones trae cada orden. La API los devuelve todos juntos, así
+    # Cuántos materiales trae cada orden. La API los devuelve todos juntos, así
     # que se cuentan de una sola pasada en lugar de pedir orden por orden.
-    renglones = {}
+    materiales = {}
     for detalle in lista(get(f"{API}/componentes/detalles/", headers)):
         clave = str(detalle.get("orden"))
-        renglones[clave] = renglones.get(clave, 0) + 1
+        materiales[clave] = materiales.get(clave, 0) + 1
 
     for orden in ordenes:
-        orden["renglones"] = renglones.get(str(orden.get("numero")), 0)
+        orden["materiales"] = materiales.get(str(orden.get("numero")), 0)
+        orden["recibida"] = bool(orden.get("recepcion"))
 
     # Sin filtro de línea: todas las que ve son de la suya.
     filtros = pedidos(request, "q", "desde", "hasta")
@@ -497,9 +520,9 @@ def ordenesListView(request):
     # El rango de fechas no es una coincidencia exacta, va aparte. Las fechas
     # llegan como AAAA-MM-DD, que se ordena bien comparándolas como texto.
     if filtros["desde"]:
-        filtradas = [o for o in filtradas if (o.get("fecha") or "") >= filtros["desde"]]
+        filtradas = [o for o in filtradas if (o.get("solicitud") or "")[:10] >= filtros["desde"]]
     if filtros["hasta"]:
-        filtradas = [o for o in filtradas if (o.get("fecha") or "") <= filtros["hasta"]]
+        filtradas = [o for o in filtradas if (o.get("solicitud") or "")[:10] <= filtros["hasta"]]
 
     contexto = {"ordenes": filtradas}
     contexto.update(contexto_de_filtros(filtros, ordenes, filtradas))
@@ -523,8 +546,7 @@ def ordenEditarView(request, numero):
             return redirect('panel_supervisor:ordenes-lista')
 
         payload = {
-            "fecha": request.POST.get("fecha") or None,
-            "hora": request.POST.get("hora") or None,
+            "necesitada": _necesitada(request),
             # Se reafirma su línea: la orden no se puede pasar a otra.
             "linea": linea,
         }
@@ -560,7 +582,7 @@ def ordenEliminarView(request, numero):
 
 @requiere_rol(ROL_SUPERVISOR)
 def ordenDetalleView(request, numero):
-    """Renglones (detalle_material) de una orden de material."""
+    """Materiales (detalle_material) de una orden de material."""
 
     if 'token' not in request.session:
         return redirect('login')
@@ -578,7 +600,7 @@ def ordenDetalleView(request, numero):
         respuesta = requests.post(f"{API}/componentes/detalles/", json=payload, headers=headers)
 
         if respuesta.status_code == 201:
-            messages.success(request, "Renglón agregado correctamente.")
+            messages.success(request, "Material agregado correctamente.")
         else:
             messages.error(request, mensaje_error(respuesta))
 
@@ -596,7 +618,7 @@ def ordenDetalleView(request, numero):
     linea = _mi_linea(request)
 
     # La lista filtra por línea, pero a esta pantalla se llega por URL: sin esto
-    # un supervisor podría leer los renglones de la orden de otra línea a mano.
+    # un supervisor podría leer los materiales de la orden de otra línea a mano.
     if orden.get("linea") != linea:
         messages.error(request, "Esa orden de material no es de tu línea.")
         return redirect('panel_supervisor:ordenes-lista')
@@ -604,23 +626,41 @@ def ordenDetalleView(request, numero):
     modelos = lista(get(f"{API}/componentes/modelos/", headers))
     modelos_por_codigo = por_codigo(modelos)
 
-    # Los renglones vienen con el código del modelo; en pantalla se acompaña del
+    # Los materiales vienen con el código del modelo; en pantalla se acompaña del
     # nombre para no obligar a nadie a memorizarse el catálogo.
-    for renglon in orden.get("detalles") or []:
-        modelo = modelos_por_codigo.get(renglon.get("modelo")) or {}
-        renglon["modelo_nombre"] = modelo.get("nombre")
+    for material in orden.get("detalles") or []:
+        modelo = modelos_por_codigo.get(material.get("modelo")) or {}
+        material["modelo_nombre"] = modelo.get("nombre")
+
+    # El combo de "Agregar material" sólo ofrece lo que esa línea sabe ensamblar,
+    # y sale del mismo catálogo con el que el trigger rechaza lo que no toca
+    # (estacion_compatibilidad_componente). Antes ofrecía los 31 modelos del
+    # catálogo y la base tumbaba la mayoría, así que el error se descubría hasta
+    # darle guardar.
+    compatibles = lista(get(f"{API}/componentes/compatibilidad-linea/", headers,
+                            params={"linea": orden.get("linea")}))
+
+    # Y de ésos, los que la orden todavía no pide. La llave de detalle_material
+    # es (orden, modelo), así que un modelo repetido no es una cantidad mayor:
+    # es un 400 por duplicado. Ofrecerlo era ofrecer un error.
+    #
+    # Se mandan las dos listas porque el combo vacío tiene dos motivos muy
+    # distintos —la línea no ensambla nada, o ya se pidió todo lo que ensambla—
+    # y la plantilla los explica por separado.
+    ya_en_la_orden = {d.get("modelo") for d in orden.get("detalles") or []}
+    disponibles = [m for m in compatibles if m.get("codigo") not in ya_en_la_orden]
 
     # Los lotes son para el modal de recibir: con cuál entran las piezas.
     lotes = lista(get(f"{API}/componentes/lotes/", headers))
 
-    contexto = {"orden": orden, "modelos": modelos, "lotes": lotes}
+    contexto = {"orden": orden, "modelos": modelos, "compatibles": compatibles, "disponibles": disponibles, "lotes": lotes}
     contexto.update(_contexto_de_linea(request))
 
     return render(request, "panel_supervisor/componentes/orden_detalle.html", contexto)
 
 
 @requiere_rol(ROL_SUPERVISOR)
-def renglonEliminarView(request, numero, modelo):
+def materialEliminarView(request, numero, modelo):
 
     if 'token' not in request.session:
         return redirect('login')
@@ -631,7 +671,7 @@ def renglonEliminarView(request, numero, modelo):
         respuesta = requests.delete(f"{API}/componentes/detalles/mod/{numero}/{modelo}/", headers=headers)
 
         if respuesta.status_code == 204:
-            messages.success(request, "Renglón eliminado correctamente.")
+            messages.success(request, "Material eliminado correctamente.")
         else:
             messages.error(request, mensaje_error(respuesta))
 
@@ -640,12 +680,12 @@ def renglonEliminarView(request, numero, modelo):
 
 @requiere_rol(ROL_SUPERVISOR)
 def ordenRecibirView(request, numero):
-    """Convierte los renglones de la orden en piezas físicas de inventario.
+    """Convierte los materiales de la orden en piezas físicas de inventario.
 
     Antes esto era capturar componente por componente desde la pantalla de
     materiales: cincuenta piezas eran cincuenta altas a mano, cada una su propia
     transacción. Ahora lo resuelve sp_Recibir_Orden_Material, que da de alta lo
-    que falte de cada renglón en una sola transacción.
+    que falte de cada material en una sola transacción.
 
     Se puede volver a llamar: el procedimiento siempre mira cuántas faltan, así
     que sirve para cuando el proveedor manda incompleto y luego completa.
@@ -666,12 +706,23 @@ def ordenRecibirView(request, numero):
 
         if respuesta.status_code == 200:
             resumen = respuesta.json()
+            pendientes = resumen.get('componentes_pendientes') or 0
+
+            # El procedimiento sólo sella la orden cuando ya no falta nada. Si
+            # quedó algo pendiente hay que decirlo: la orden sigue abierta y se
+            # puede volver a recibir cuando el proveedor complete.
+            if pendientes:
+                cierre = f". Faltan {pendientes} pieza(s) por recibir, la orden sigue abierta."
+            else:
+                cierre = ". La orden quedó completa y se marcó como recibida."
+
             messages.success(
                 request,
                 f"Se recibieron {resumen.get('componentes_creados', 0)} pieza(s) "
                 f"de la orden #{numero}, disponibles en {resumen.get('linea')}"
-                + (f". Ya se habían recibido {resumen['componentes_previos']} antes."
-                   if resumen.get('componentes_previos') else ".")
+                + (f". Ya se habían recibido {resumen['componentes_previos']} antes"
+                   if resumen.get('componentes_previos') else "")
+                + cierre
             )
         else:
             messages.error(request, mensaje_error(respuesta))

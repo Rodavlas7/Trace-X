@@ -1,4 +1,6 @@
 
+from django.utils import timezone
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -82,9 +84,43 @@ class ModeloLaptopComponenteDetalleSerializer(serializers.ModelSerializer):
 # Ordenes de material
  
 class OrdenMaterialSerializer(serializers.ModelSerializer):
+    """Orden de material. De sus tres fechas el usuario sólo captura una.
+
+    `solicitud` la sella create() con la hora del servidor: es cuándo se pidió
+    el material, no un dato que nadie deba teclear ni corregir. `recepcion` la
+    escribe sp_Recibir_Orden_Material cuando la orden queda completa. Las dos
+    van de solo lectura para que la pantalla las muestre sin poder alterarlas;
+    la única que se captura es `necesitada`.
+    """
+
     class Meta:
         model = OrdenMaterial
         fields = '__all__'
+        read_only_fields = ['solicitud', 'recepcion']
+
+    def validate_necesitada(self, valor):
+        """No se puede necesitar material en un momento que ya pasó."""
+
+        if valor is None:
+            return valor
+
+        # Al editar sólo se revisa si de verdad cambió. Una orden de la semana
+        # pasada tiene su fecha en el pasado por definición, y volver a guardarla
+        # sin tocarle ese campo —para corregirle la línea, por ejemplo— no es un
+        # error que haya que rechazar.
+        if self.instance is not None and self.instance.necesitada == valor:
+            return valor
+
+        if valor < timezone.now():
+            raise serializers.ValidationError(
+                'La fecha y hora en que se necesita el material no puede ser anterior a este momento.'
+            )
+
+        return valor
+
+    def create(self, validated_data):
+        validated_data['solicitud'] = timezone.now()
+        return super().create(validated_data)
  
  
 class DetalleMaterialSerializer(serializers.ModelSerializer):
@@ -97,17 +133,20 @@ class DetalleMaterialSerializer(serializers.ModelSerializer):
         # La llave primaria es compuesta (orden, modelo). DRF no deduce solo
         # esa restricción, así que repetir un modelo en la misma orden llegaba
         # hasta MySQL y reventaba en 500. Validado aquí sale un 400 con motivo.
+        #
+        # El formulario ya no ofrece los modelos que la orden tiene, así que
+        # esto es la red de abajo: cubre a quien llegue por la API directa.
         validators = [
             UniqueTogetherValidator(
                 queryset=DetalleMaterial.objects.all(),
                 fields=['orden', 'modelo'],
-                message='Esa orden ya tiene un renglón para ese modelo: edita la cantidad en lugar de agregarlo otra vez.',
+                message='Esa orden ya pide ese modelo: cámbiale la cantidad al material que ya tiene, en lugar de agregarlo otra vez.',
             )
         ]
  
  
 class OrdenMaterialDetailSerializer(OrdenMaterialSerializer):
-    """Detalle de una orden de material con sus renglones (detalle_material) anidados."""
+    """Detalle de una orden de material con sus materiales (detalle_material) anidados."""
     detalles = serializers.SerializerMethodField()
  
     def get_detalles(self, obj):

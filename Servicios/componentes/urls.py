@@ -24,6 +24,10 @@ urlpatterns = [
     path("compatibilidad/mod/<str:modelo_laptop>/<str:modelo_componente>/", ModeloLaptopComponenteModifyAPIView.as_view(), name="mlc-modify"),
 
     # Ordenes de material
+    # Qué materiales puede pedir una línea (estacion_compatibilidad_componente).
+    # No confundir con "compatibilidad/" de arriba, que es el BOM de la laptop.
+    path("compatibilidad-linea/", ModelosCompatiblesLineaAPIView.as_view(), name="modelos-compatibles-linea"),
+
     path("ordenes/", OrdenMaterialListCreateAPIView.as_view(), name="orden-material-list-create"),
     path("ordenes/mod/<int:numero>/", OrdenMaterialModifyAPIView.as_view(), name="orden-material-modify"),
     path("ordenes/<int:numero>/", OrdenMaterialDetailAPIView.as_view(), name="orden-material-detail"),
