@@ -86,7 +86,9 @@ BEGIN
                WHEN 'TC013' THEN 'LIN004'   -- Chasis Inferior
            END,
            mc.codigo,
-           IF(n.i % 2 = 0, 'LCOMP-002', 'LCOMP-001'),
+           -- El lote se asigna hasta la sección 7, cuando ya existen todas las
+           -- piezas y se puede cortar cada 20 por modelo de una sola pasada.
+           NULL,
            'EDC001',
            NULL
       FROM modelo_componente mc, n;
@@ -606,7 +608,79 @@ UPDATE registro_embalaje rb
 
 
 -- ============================================================================
---  7. SE RETIRA EL ANDAMIO
+--  7. LOTES DE COMPONENTE
+--
+--  Un lote es lo que llegó junto del proveedor, y el proveedor surte en cajas:
+--  aquí se corta cada 20 piezas DEL MISMO MODELO. El corte es por modelo y no
+--  por número de componente porque una caja no trae chasis y teclados
+--  revueltos.
+--
+--  POR QUÉ 20 Y NO 50
+--  ------------------
+--  Cada modelo acaba con entre 45 y 51 piezas —40 de sp_p2_surtir más las que
+--  trae datos_pruebas.sql—, así que cortar cada 50 daría UN lote por modelo, y
+--  tres lotes de una sola pieza para los modelos que llegan a 51. Con eso,
+--  decir "el lote X salió malo" sería idéntico a decir "ese modelo salió malo":
+--  el lote no aportaría nada que el modelo no dijera ya.
+--
+--  Cada 20 da 3 lotes por modelo, así que un lote defectuoso pega en un tercio
+--  de las laptops que llevan esa pieza. Ése es el caso que hace útil la
+--  trazabilidad, y es lo que empieza a distinguir vista_traza_orden_componentes
+--  (DB/vistas.sql), que agrupa por lote y hasta ahora veía los mismos dos en
+--  todas las órdenes.
+--
+--  SE HACE HASTA AQUÍ, y no al crear cada pieza, para que la regla se aplique
+--  una sola vez sobre el total: así no importa en qué archivo nació cada
+--  componente ni con cuántas unidades se llame a sp_p2_surtir.
+--
+--  Las piezas que se den de alta después, al recibir una orden de material,
+--  llevan el lote que elija quien la reciba: sp_Recibir_Orden_Material no
+--  inventa lotes.
+-- ============================================================================
+
+-- Los códigos quedan LC-<modelo>-<NN>: 11 caracteres, caben en el varchar(12).
+-- El tope de 20 en la recursión es holgura; hoy ningún modelo pasa de 3 lotes.
+INSERT INTO lote_comp (codigo, descripcion)
+WITH RECURSIVE n(i) AS (
+    SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 20
+),
+por_modelo AS (
+    SELECT modelo, CEIL(COUNT(*) / 20) AS lotes
+      FROM componente
+     WHERE modelo IS NOT NULL
+     GROUP BY modelo
+)
+SELECT CONCAT('LC-', p.modelo, '-', LPAD(n.i, 2, '0')),
+       CONCAT(mc.nombre, ' - lote ', LPAD(n.i, 2, '0'))
+  FROM por_modelo p
+  JOIN n ON n.i <= p.lotes
+  JOIN modelo_componente mc ON mc.codigo = p.modelo;
+
+-- Cada pieza a su lote según su posición dentro del modelo: las primeras 20 al
+-- 01, las siguientes 20 al 02, y así. Se ordena por `numero`, que es el orden
+-- en que entraron, para que las piezas viejas —las que datos_pruebas.sql ya
+-- dejó montadas en laptops— caigan en los lotes bajos.
+--
+-- Va por tabla temporal porque MySQL no deja leer `componente` dentro de un
+-- UPDATE sobre `componente`.
+DROP TEMPORARY TABLE IF EXISTS tmp_lote_pieza;
+CREATE TEMPORARY TABLE tmp_lote_pieza AS
+SELECT numero,
+       CONCAT('LC-', modelo, '-',
+              LPAD(CEIL(ROW_NUMBER() OVER (PARTITION BY modelo ORDER BY numero) / 20),
+                   2, '0')) AS lote
+  FROM componente
+ WHERE modelo IS NOT NULL;
+
+UPDATE componente c
+  JOIN tmp_lote_pieza t ON t.numero = c.numero
+   SET c.lote = t.lote;
+
+DROP TEMPORARY TABLE tmp_lote_pieza;
+
+
+-- ============================================================================
+--  8. SE RETIRA EL ANDAMIO
 -- ============================================================================
 DROP PROCEDURE IF EXISTS sp_p2_surtir;
 DROP PROCEDURE IF EXISTS sp_p2_montar;

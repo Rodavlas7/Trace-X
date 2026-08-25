@@ -164,52 +164,52 @@ INSERT INTO modelo_laptop (codigo, nombre) VALUES
 
 -- 10. MODELOS DE COMPONENTE (ThinkPad T14 Gen 5)
 
-INSERT INTO modelo_componente (codigo, nombre, tipo_componente) VALUES
+INSERT INTO modelo_componente (codigo, nombre, tipo_componente, fabricante) VALUES
 -- Procesadores
-('MC001', 'AMD Ryzen 5 PRO 7540U',           'TC001'),
-('MC002', 'AMD Ryzen 7 PRO 7840U',           'TC001'),
-('MC003', 'Intel Core Ultra 5 125U',         'TC001'),
-('MC004', 'Intel Core Ultra 7 165U',         'TC001'),
+('MC001', 'AMD Ryzen 5 PRO 7540U',           'TC001', 'AMD'     ),
+('MC002', 'AMD Ryzen 7 PRO 7840U',           'TC001', 'AMD'     ),
+('MC003', 'Intel Core Ultra 5 125U',         'TC001', 'Intel'   ),
+('MC004', 'Intel Core Ultra 7 165U',         'TC001', 'Intel'   ),
 -- Memorias RAM
-('MC005', 'Samsung 8GB DDR5-5600 SO-DIMM',  'TC002'),
-('MC006', 'Samsung 16GB DDR5-5600 SO-DIMM', 'TC002'),
-('MC007', 'Micron 32GB DDR5-5600 SO-DIMM',  'TC002'),
+('MC005', 'Samsung 8GB DDR5-5600 SO-DIMM',  'TC002', 'Samsung' ),
+('MC006', 'Samsung 16GB DDR5-5600 SO-DIMM', 'TC002', 'Samsung' ),
+('MC007', 'Micron 32GB DDR5-5600 SO-DIMM',  'TC002', 'Micron'  ),
 -- Almacenamiento SSD
-('MC008', 'Samsung PM9A1 256GB NVMe M.2',   'TC003'),
-('MC009', 'Samsung PM9A1 512GB NVMe M.2',   'TC003'),
-('MC010', 'Samsung PM9A1 1TB NVMe M.2',     'TC003'),
-('MC011', 'Seagate FireCuda 2TB NVMe M.2',  'TC003'),
+('MC008', 'Samsung PM9A1 256GB NVMe M.2',   'TC003', 'Samsung' ),
+('MC009', 'Samsung PM9A1 512GB NVMe M.2',   'TC003', 'Samsung' ),
+('MC010', 'Samsung PM9A1 1TB NVMe M.2',     'TC003', 'Samsung' ),
+('MC011', 'Seagate FireCuda 2TB NVMe M.2',  'TC003', 'Seagate' ),
 -- Tarjeta Madre
-('MC012', 'Lenovo T14 G5 AMD Mainboard',    'TC004'),
-('MC013', 'Lenovo T14 G5 Intel Mainboard',  'TC004'),
+('MC012', 'Lenovo T14 G5 AMD Mainboard',    'TC004', 'Lenovo'  ),
+('MC013', 'Lenovo T14 G5 Intel Mainboard',  'TC004', 'Lenovo'  ),
 -- Pantalla
-('MC014', 'BOE 14" FHD IPS 400nit',         'TC005'),
-('MC015', 'LG 14" WUXGA IPS Touch 400nit',  'TC005'),
-('MC016', 'BOE 14" 2.8K OLED 400nit',       'TC005'),
+('MC014', 'BOE 14" FHD IPS 400nit',         'TC005', 'BOE'     ),
+('MC015', 'LG 14" WUXGA IPS Touch 400nit',  'TC005', 'LG'      ),
+('MC016', 'BOE 14" 2.8K OLED 400nit',       'TC005', 'BOE'     ),
 -- Batería
-('MC017', 'Lenovo 52.5Wh Li-Ion T14G5',     'TC006'),
+('MC017', 'Lenovo 52.5Wh Li-Ion T14G5',     'TC006', 'Lenovo'  ),
 -- Teclado
-('MC018', 'Lenovo KB T14G5 ES Retroilum.',  'TC007'),
-('MC019', 'Lenovo KB T14G5 US Retroilum.',  'TC007'),
+('MC018', 'Lenovo KB T14G5 ES Retroilum.',  'TC007', 'Lenovo'  ),
+('MC019', 'Lenovo KB T14G5 US Retroilum.',  'TC007', 'Lenovo'  ),
 -- Touchpad
-('MC020', 'Lenovo Touchpad T14G5 NFC',      'TC008'),
-('MC021', 'Lenovo Touchpad T14G5 Std',      'TC008'),
+('MC020', 'Lenovo Touchpad T14G5 NFC',      'TC008', 'Lenovo'  ),
+('MC021', 'Lenovo Touchpad T14G5 Std',      'TC008', 'Lenovo'  ),
 -- Cámara Web
-('MC022', 'Chicony 1080p FHD IR+RGB',       'TC009'),
-('MC023', 'Chicony 5MP IR+RGB',             'TC009'),
+('MC022', 'Chicony 1080p FHD IR+RGB',       'TC009', 'Chicony' ),
+('MC023', 'Chicony 5MP IR+RGB',             'TC009', 'Chicony' ),
 -- Tarjeta de Red
-('MC024', 'Intel Wi-Fi 6E AX211 M.2',       'TC010'),
-('MC025', 'Qualcomm FastConnect 6900 M.2',  'TC010'),
+('MC024', 'Intel Wi-Fi 6E AX211 M.2',       'TC010', 'Intel'   ),
+('MC025', 'Qualcomm FastConnect 6900 M.2',  'TC010', 'Qualcomm'),
 -- Disipador
-('MC026', 'Lenovo Thermal Module T14G5 AMD','TC011'),
-('MC027', 'Lenovo Thermal Module T14G5 Int','TC011'),
+('MC026', 'Lenovo Thermal Module T14G5 AMD','TC011', 'Lenovo'  ),
+('MC027', 'Lenovo Thermal Module T14G5 Int','TC011', 'Lenovo'  ),
 -- Chasis
-('MC028', 'Lenovo Top Cover T14G5 Negro',   'TC012'),
-('MC029', 'Lenovo Bottom Cover T14G5',      'TC013'),
+('MC028', 'Lenovo Top Cover T14G5 Negro',   'TC012', 'Lenovo'  ),
+('MC029', 'Lenovo Bottom Cover T14G5',      'TC013', 'Lenovo'  ),
 -- Conector de carga
-('MC030', 'Lenovo USB-C Power Connector',   'TC014'),
+('MC030', 'Lenovo USB-C Power Connector',   'TC014', 'Lenovo'  ),
 -- Altavoces
-('MC031', 'Harman 2x2W Speaker T14G5',      'TC015');
+('MC031', 'Harman 2x2W Speaker T14G5',      'TC015', 'Harman'  );
 
 
 -- 10.1 COMPATIBILIDAD — BOM (Bill of Materials / Lista de Materiales)
@@ -343,11 +343,17 @@ INSERT INTO lote_laptop (codigo, fecha) VALUES
 ('LOT2026C', '2026-08-07');
 
 
--- 14. LOTE DE COMPONENTES (ejemplo)
-
-INSERT INTO lote_comp (codigo, descripcion) VALUES
-('LCOMP-001', 'Lote de componentes AMD'),
-('LCOMP-002', 'Lote de componentes Intel');
+-- 14. LOTE DE COMPONENTES
+--
+-- Aquí no se siembra ninguno. Un lote de componente es lo que llegó junto del
+-- proveedor, así que no tiene sentido sin las piezas que lo forman: los arma
+-- la sección 7 de datos_pruebas2.sql, uno por cada 20 piezas del mismo modelo,
+-- una vez que todas existen.
+--
+-- Antes había dos de ejemplo, 'LCOMP-001' (AMD) y 'LCOMP-002' (Intel), que se
+-- repartían las 1465 piezas casi en mitades. Como un mismo lote acababa
+-- teniendo chasis, teclados y bisagras, no describía ninguna llegada real y
+-- vista_traza_orden_componentes veía los mismos dos lotes en todas las órdenes.
 
 
 

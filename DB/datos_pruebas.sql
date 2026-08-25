@@ -132,67 +132,69 @@ UPDATE registro_ensamblaje
 
 -- L2 — se queda en la línea A con sus piezas puestas
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 2 AND fecha_fin IS NULL);
+-- El lote va en NULL a propósito: se asigna en la sección 7 de
+-- datos_pruebas2.sql, cortando cada 20 piezas por modelo sobre el total.
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L2-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L2-TPD', 'Touchpad',          'LIN001', 'MC020', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L2-KBD', 'Teclado',           'LIN001', 'MC018', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L2-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L2-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L2-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L2-TPD', 'Touchpad',          'LIN001', 'MC020', NULL, 'EDC002', @reg),
+('CMP-L2-KBD', 'Teclado',           'LIN001', 'MC018', NULL, 'EDC002', @reg),
+('CMP-L2-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L2-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 
 
 -- L3 — pasa la A y se queda a medias en la B
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 3 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L3-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L3-TPD', 'Touchpad',          'LIN001', 'MC021', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L3-KBD', 'Teclado',           'LIN001', 'MC019', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L3-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L3-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L3-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L3-TPD', 'Touchpad',          'LIN001', 'MC021', NULL, 'EDC002', @reg),
+('CMP-L3-KBD', 'Teclado',           'LIN001', 'MC019', NULL, 'EDC002', @reg),
+('CMP-L3-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L3-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Chasis, teclado y audio correctos', '2026-07-21', '09:10:00', 3, 2607004, 'LIN001');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 3 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L3-MB',  'Tarjeta madre', 'LIN002', 'MC012', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L3-CPU', 'Procesador',    'LIN002', 'MC001', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L3-MB',  'Tarjeta madre', 'LIN002', 'MC012', NULL, 'EDC002', @reg),
+('CMP-L3-CPU', 'Procesador',    'LIN002', 'MC001', NULL, 'EDC002', @reg);
 
 
 -- L4 — recorre las cuatro líneas y sale aprobada
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 4 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L4-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-TPD', 'Touchpad',          'LIN001', 'MC020', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-KBD', 'Teclado',           'LIN001', 'MC018', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L4-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L4-TPD', 'Touchpad',          'LIN001', 'MC020', NULL, 'EDC002', @reg),
+('CMP-L4-KBD', 'Teclado',           'LIN001', 'MC018', NULL, 'EDC002', @reg),
+('CMP-L4-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L4-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Línea A conforme', '2026-07-21', '08:40:00', 4, 2607004, 'LIN001');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 4 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L4-MB',   'Tarjeta madre', 'LIN002', 'MC013', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-CPU',  'Procesador',    'LIN002', 'MC002', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-RAM2', 'RAM módulo 2',  'LIN002', 'MC007', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L4-MB',   'Tarjeta madre', 'LIN002', 'MC013', NULL, 'EDC002', @reg),
+('CMP-L4-CPU',  'Procesador',    'LIN002', 'MC002', NULL, 'EDC002', @reg),
+('CMP-L4-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', NULL, 'EDC002', @reg),
+('CMP-L4-RAM2', 'RAM módulo 2',  'LIN002', 'MC007', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Placa, CPU y RAM conformes', '2026-07-21', '09:20:00', 4, 2607009, 'LIN002');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 4 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L4-SSD1', 'SSD 1',         'LIN003', 'MC010', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-SSD2', 'SSD 2',         'LIN003', 'MC009', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-WIFI', 'Tarjeta de red','LIN003', 'MC024', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-THM',  'Disipador',     'LIN003', 'MC027', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L4-SSD1', 'SSD 1',         'LIN003', 'MC010', NULL, 'EDC002', @reg),
+('CMP-L4-SSD2', 'SSD 2',         'LIN003', 'MC009', NULL, 'EDC002', @reg),
+('CMP-L4-WIFI', 'Tarjeta de red','LIN003', 'MC024', NULL, 'EDC002', @reg),
+('CMP-L4-THM',  'Disipador',     'LIN003', 'MC027', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Almacenamiento, red y térmico conformes', '2026-07-21', '10:05:00', 4, 2607014, 'LIN003');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 4 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L4-PAN', 'Pantalla',        'LIN004', 'MC014', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-CAM', 'Cámara web',      'LIN004', 'MC022', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-BAT', 'Batería',         'LIN004', 'MC017', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L4-BOT', 'Chasis inferior', 'LIN004', 'MC029', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L4-PAN', 'Pantalla',        'LIN004', 'MC014', NULL, 'EDC002', @reg),
+('CMP-L4-CAM', 'Cámara web',      'LIN004', 'MC022', NULL, 'EDC002', @reg),
+('CMP-L4-BAT', 'Batería',         'LIN004', 'MC017', NULL, 'EDC002', @reg),
+('CMP-L4-BOT', 'Chasis inferior', 'LIN004', 'MC029', NULL, 'EDC002', @reg);
 -- Última línea: esta aprobación sí es la final, la laptop pasa a APROV.
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Equipo cerrado y probado, aprobada', '2026-07-21', '10:30:00', 4, 2607019, 'LIN004');
@@ -201,19 +203,19 @@ INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, e
 -- L5 — pasa la A y la rechazan en la B por un módulo de RAM
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 5 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L5-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-TPD', 'Touchpad',          'LIN001', 'MC021', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-KBD', 'Teclado',           'LIN001', 'MC019', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L5-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L5-TPD', 'Touchpad',          'LIN001', 'MC021', NULL, 'EDC002', @reg),
+('CMP-L5-KBD', 'Teclado',           'LIN001', 'MC019', NULL, 'EDC002', @reg),
+('CMP-L5-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L5-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Línea A conforme', '2026-07-21', '08:50:00', 5, 2607004, 'LIN001');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 5 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L5-MB',   'Tarjeta madre', 'LIN002', 'MC012', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-CPU',  'Procesador',    'LIN002', 'MC001', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L5-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', 'LCOMP-001', 'EDC003', @reg);
+('CMP-L5-MB',   'Tarjeta madre', 'LIN002', 'MC012', NULL, 'EDC002', @reg),
+('CMP-L5-CPU',  'Procesador',    'LIN002', 'MC001', NULL, 'EDC002', @reg),
+('CMP-L5-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', NULL, 'EDC003', @reg);
 
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (0, 'Módulo de RAM no detectado en POST, se rechaza', '2026-07-21', '09:45:00', 5, 2607009, 'LIN002');
@@ -229,20 +231,20 @@ INSERT INTO detalle_inspeccion (inspeccion, componente, observacion) VALUES
 -- L6 — pasa A y B, se queda abierta en la C
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 6 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L6-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-TPD', 'Touchpad',          'LIN001', 'MC020', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-KBD', 'Teclado',           'LIN001', 'MC018', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L6-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L6-TPD', 'Touchpad',          'LIN001', 'MC020', NULL, 'EDC002', @reg),
+('CMP-L6-KBD', 'Teclado',           'LIN001', 'MC018', NULL, 'EDC002', @reg),
+('CMP-L6-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L6-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Línea A conforme', '2026-07-21', '09:00:00', 6, 2607004, 'LIN001');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 6 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L6-MB',   'Tarjeta madre', 'LIN002', 'MC013', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-CPU',  'Procesador',    'LIN002', 'MC003', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-RAM1', 'RAM módulo 1',  'LIN002', 'MC006', 'LCOMP-002', 'EDC002', @reg),
-('CMP-L6-RAM2', 'RAM módulo 2',  'LIN002', 'MC007', 'LCOMP-002', 'EDC002', @reg);
+('CMP-L6-MB',   'Tarjeta madre', 'LIN002', 'MC013', NULL, 'EDC002', @reg),
+('CMP-L6-CPU',  'Procesador',    'LIN002', 'MC003', NULL, 'EDC002', @reg),
+('CMP-L6-RAM1', 'RAM módulo 1',  'LIN002', 'MC006', NULL, 'EDC002', @reg),
+('CMP-L6-RAM2', 'RAM módulo 2',  'LIN002', 'MC007', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Placa, CPU y RAM conformes', '2026-07-21', '10:15:00', 6, 2607009, 'LIN002');
 
@@ -250,38 +252,38 @@ INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, e
 -- L7 — recorre todo y queda aprobada; se embala más abajo
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 7 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L7-CHS', 'Chasis superior',   'LIN001', 'MC028', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-TPD', 'Touchpad',          'LIN001', 'MC021', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-KBD', 'Teclado',           'LIN001', 'MC019', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-SPK', 'Altavoces',         'LIN001', 'MC031', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-PWR', 'Conector de carga', 'LIN001', 'MC030', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L7-CHS', 'Chasis superior',   'LIN001', 'MC028', NULL, 'EDC002', @reg),
+('CMP-L7-TPD', 'Touchpad',          'LIN001', 'MC021', NULL, 'EDC002', @reg),
+('CMP-L7-KBD', 'Teclado',           'LIN001', 'MC019', NULL, 'EDC002', @reg),
+('CMP-L7-SPK', 'Altavoces',         'LIN001', 'MC031', NULL, 'EDC002', @reg),
+('CMP-L7-PWR', 'Conector de carga', 'LIN001', 'MC030', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Línea A conforme', '2026-07-20', '08:30:00', 7, 2607004, 'LIN001');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 7 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L7-MB',   'Tarjeta madre', 'LIN002', 'MC012', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-CPU',  'Procesador',    'LIN002', 'MC001', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-RAM2', 'RAM módulo 2',  'LIN002', 'MC006', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L7-MB',   'Tarjeta madre', 'LIN002', 'MC012', NULL, 'EDC002', @reg),
+('CMP-L7-CPU',  'Procesador',    'LIN002', 'MC001', NULL, 'EDC002', @reg),
+('CMP-L7-RAM1', 'RAM módulo 1',  'LIN002', 'MC005', NULL, 'EDC002', @reg),
+('CMP-L7-RAM2', 'RAM módulo 2',  'LIN002', 'MC006', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Placa, CPU y RAM conformes', '2026-07-20', '09:15:00', 7, 2607009, 'LIN002');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 7 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L7-SSD1', 'SSD 1',          'LIN003', 'MC009', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-SSD2', 'SSD 2',          'LIN003', 'MC011', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-WIFI', 'Tarjeta de red', 'LIN003', 'MC025', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-THM',  'Disipador',      'LIN003', 'MC026', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L7-SSD1', 'SSD 1',          'LIN003', 'MC009', NULL, 'EDC002', @reg),
+('CMP-L7-SSD2', 'SSD 2',          'LIN003', 'MC011', NULL, 'EDC002', @reg),
+('CMP-L7-WIFI', 'Tarjeta de red', 'LIN003', 'MC025', NULL, 'EDC002', @reg),
+('CMP-L7-THM',  'Disipador',      'LIN003', 'MC026', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Almacenamiento, red y térmico conformes', '2026-07-20', '10:00:00', 7, 2607014, 'LIN003');
 
 SET @reg := (SELECT numero FROM registro_ensamblaje WHERE laptop = 7 AND fecha_fin IS NULL);
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('CMP-L7-PAN', 'Pantalla',        'LIN004', 'MC016', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-CAM', 'Cámara web',      'LIN004', 'MC023', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-BAT', 'Batería',         'LIN004', 'MC017', 'LCOMP-001', 'EDC002', @reg),
-('CMP-L7-BOT', 'Chasis inferior', 'LIN004', 'MC029', 'LCOMP-001', 'EDC002', @reg);
+('CMP-L7-PAN', 'Pantalla',        'LIN004', 'MC016', NULL, 'EDC002', @reg),
+('CMP-L7-CAM', 'Cámara web',      'LIN004', 'MC023', NULL, 'EDC002', @reg),
+('CMP-L7-BAT', 'Batería',         'LIN004', 'MC017', NULL, 'EDC002', @reg),
+('CMP-L7-BOT', 'Chasis inferior', 'LIN004', 'MC029', NULL, 'EDC002', @reg);
 INSERT INTO inspeccion_calidad (resultado, observaciones, fecha, hora, laptop, empleado, linea) VALUES
 (1, 'Cumple especificaciones, aprobada', '2026-07-20', '11:30:00', 7, 2607019, 'LIN004');
 
@@ -320,13 +322,13 @@ UPDATE registro_ensamblaje
 --     en la línea equivocada aparece como si esa línea la instalara.
 -- ============================================================
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('INV-CPU-01', 'Procesador en inventario', 'LIN002', 'MC004', 'LCOMP-002', 'EDC001', NULL),
-('INV-SSD-01', 'SSD en inventario',        'LIN003', 'MC008', 'LCOMP-001', 'EDC001', NULL),
-('INV-PAN-01', 'Pantalla en inventario',   'LIN004', 'MC014', 'LCOMP-001', 'EDC001', NULL),
-('INV-KB-01',  'Teclado en inventario',    'LIN001', 'MC018', 'LCOMP-001', 'EDC001', NULL),
-('INV-WIFI-01','Wi-Fi en inventario',      'LIN003', 'MC024', 'LCOMP-002', 'EDC001', NULL),
-('INV-CAM-01', 'Cámara dañada',            'LIN004', 'MC022', 'LCOMP-001', 'EDC003', NULL),
-('INV-BAT-01', 'Batería mermada',          'LIN004', 'MC017', 'LCOMP-002', 'EDC004', NULL);
+('INV-CPU-01', 'Procesador en inventario', 'LIN002', 'MC004', NULL, 'EDC001', NULL),
+('INV-SSD-01', 'SSD en inventario',        'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('INV-PAN-01', 'Pantalla en inventario',   'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('INV-KB-01',  'Teclado en inventario',    'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('INV-WIFI-01','Wi-Fi en inventario',      'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('INV-CAM-01', 'Cámara dañada',            'LIN004', 'MC022', NULL, 'EDC003', NULL),
+('INV-BAT-01', 'Batería mermada',          'LIN004', 'MC017', NULL, 'EDC004', NULL);
 
 
 -- ============================================================
@@ -426,197 +428,197 @@ INSERT INTO paro (razon, fecha_inicio, fecha_fin, hora_inicio, hora_fin, linea) 
 
 -- LIN001 · EST-A1 Chasis y Touchpad
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC020-1', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC020-2', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC020-3', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC020-4', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC020-5', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC021-1', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC021-2', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC021-3', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC021-4', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC021-5', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC028-1', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC028-2', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC028-3', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC028-4', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC028-5', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC020-1', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', NULL, 'EDC001', NULL),
+('STK-MC020-2', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', NULL, 'EDC001', NULL),
+('STK-MC020-3', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', NULL, 'EDC001', NULL),
+('STK-MC020-4', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', NULL, 'EDC001', NULL),
+('STK-MC020-5', 'Lenovo Touchpad T14G5 NFC', 'LIN001', 'MC020', NULL, 'EDC001', NULL),
+('STK-MC021-1', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', NULL, 'EDC001', NULL),
+('STK-MC021-2', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', NULL, 'EDC001', NULL),
+('STK-MC021-3', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', NULL, 'EDC001', NULL),
+('STK-MC021-4', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', NULL, 'EDC001', NULL),
+('STK-MC021-5', 'Lenovo Touchpad T14G5 Std', 'LIN001', 'MC021', NULL, 'EDC001', NULL),
+('STK-MC028-1', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', NULL, 'EDC001', NULL),
+('STK-MC028-2', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', NULL, 'EDC001', NULL),
+('STK-MC028-3', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', NULL, 'EDC001', NULL),
+('STK-MC028-4', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', NULL, 'EDC001', NULL),
+('STK-MC028-5', 'Lenovo Top Cover T14G5 Negro', 'LIN001', 'MC028', NULL, 'EDC001', NULL);
 
 -- LIN001 · EST-A2 Módulo de Teclado
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC018-1', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC018-2', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC018-3', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC018-4', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC018-5', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC019-1', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC019-2', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC019-3', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC019-4', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC019-5', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC018-1', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('STK-MC018-2', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('STK-MC018-3', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('STK-MC018-4', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('STK-MC018-5', 'Lenovo KB T14G5 ES Retroilum.', 'LIN001', 'MC018', NULL, 'EDC001', NULL),
+('STK-MC019-1', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', NULL, 'EDC001', NULL),
+('STK-MC019-2', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', NULL, 'EDC001', NULL),
+('STK-MC019-3', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', NULL, 'EDC001', NULL),
+('STK-MC019-4', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', NULL, 'EDC001', NULL),
+('STK-MC019-5', 'Lenovo KB T14G5 US Retroilum.', 'LIN001', 'MC019', NULL, 'EDC001', NULL);
 
 -- LIN001 · EST-A3 Audio y Conexiones
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC031-1', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC031-2', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC031-3', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC031-4', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC031-5', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC031-1', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', NULL, 'EDC001', NULL),
+('STK-MC031-2', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', NULL, 'EDC001', NULL),
+('STK-MC031-3', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', NULL, 'EDC001', NULL),
+('STK-MC031-4', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', NULL, 'EDC001', NULL),
+('STK-MC031-5', 'Harman 2x2W Speaker T14G5', 'LIN001', 'MC031', NULL, 'EDC001', NULL);
 
 -- LIN001 · EST-A4 Conector de Carga
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC030-1', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC030-2', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC030-3', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC030-4', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC030-5', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC030-1', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', NULL, 'EDC001', NULL),
+('STK-MC030-2', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', NULL, 'EDC001', NULL),
+('STK-MC030-3', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', NULL, 'EDC001', NULL),
+('STK-MC030-4', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', NULL, 'EDC001', NULL),
+('STK-MC030-5', 'Lenovo USB-C Power Connector', 'LIN001', 'MC030', NULL, 'EDC001', NULL);
 
 -- LIN002 · EST-B1 Tarjeta Madre
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC012-1', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC012-2', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC012-3', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC012-4', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC012-5', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC013-1', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC013-2', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC013-3', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC013-4', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC013-5', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC012-1', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', NULL, 'EDC001', NULL),
+('STK-MC012-2', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', NULL, 'EDC001', NULL),
+('STK-MC012-3', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', NULL, 'EDC001', NULL),
+('STK-MC012-4', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', NULL, 'EDC001', NULL),
+('STK-MC012-5', 'Lenovo T14 G5 AMD Mainboard', 'LIN002', 'MC012', NULL, 'EDC001', NULL),
+('STK-MC013-1', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', NULL, 'EDC001', NULL),
+('STK-MC013-2', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', NULL, 'EDC001', NULL),
+('STK-MC013-3', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', NULL, 'EDC001', NULL),
+('STK-MC013-4', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', NULL, 'EDC001', NULL),
+('STK-MC013-5', 'Lenovo T14 G5 Intel Mainboard', 'LIN002', 'MC013', NULL, 'EDC001', NULL);
 
 -- LIN002 · EST-B3 CPU y Pasta Térmica
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC001-1', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC001-2', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC001-3', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC001-4', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC001-5', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC002-1', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC002-2', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC002-3', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC002-4', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC002-5', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC003-1', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC003-2', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC003-3', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC003-4', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC003-5', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC004-1', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC004-2', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC004-3', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC004-4', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC004-5', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC001-1', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', NULL, 'EDC001', NULL),
+('STK-MC001-2', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', NULL, 'EDC001', NULL),
+('STK-MC001-3', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', NULL, 'EDC001', NULL),
+('STK-MC001-4', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', NULL, 'EDC001', NULL),
+('STK-MC001-5', 'AMD Ryzen 5 PRO 7540U', 'LIN002', 'MC001', NULL, 'EDC001', NULL),
+('STK-MC002-1', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', NULL, 'EDC001', NULL),
+('STK-MC002-2', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', NULL, 'EDC001', NULL),
+('STK-MC002-3', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', NULL, 'EDC001', NULL),
+('STK-MC002-4', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', NULL, 'EDC001', NULL),
+('STK-MC002-5', 'AMD Ryzen 7 PRO 7840U', 'LIN002', 'MC002', NULL, 'EDC001', NULL),
+('STK-MC003-1', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', NULL, 'EDC001', NULL),
+('STK-MC003-2', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', NULL, 'EDC001', NULL),
+('STK-MC003-3', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', NULL, 'EDC001', NULL),
+('STK-MC003-4', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', NULL, 'EDC001', NULL),
+('STK-MC003-5', 'Intel Core Ultra 5 125U', 'LIN002', 'MC003', NULL, 'EDC001', NULL),
+('STK-MC004-1', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', NULL, 'EDC001', NULL),
+('STK-MC004-2', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', NULL, 'EDC001', NULL),
+('STK-MC004-3', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', NULL, 'EDC001', NULL),
+('STK-MC004-4', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', NULL, 'EDC001', NULL),
+('STK-MC004-5', 'Intel Core Ultra 7 165U', 'LIN002', 'MC004', NULL, 'EDC001', NULL);
 
 -- LIN002 · EST-B4 Memoria RAM
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC005-1', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC005-2', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC005-3', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC005-4', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC005-5', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC006-1', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC006-2', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC006-3', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC006-4', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC006-5', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC007-1', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC007-2', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC007-3', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC007-4', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC007-5', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC005-1', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', NULL, 'EDC001', NULL),
+('STK-MC005-2', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', NULL, 'EDC001', NULL),
+('STK-MC005-3', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', NULL, 'EDC001', NULL),
+('STK-MC005-4', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', NULL, 'EDC001', NULL),
+('STK-MC005-5', 'Samsung 8GB DDR5-5600 SO-DIMM', 'LIN002', 'MC005', NULL, 'EDC001', NULL),
+('STK-MC006-1', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', NULL, 'EDC001', NULL),
+('STK-MC006-2', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', NULL, 'EDC001', NULL),
+('STK-MC006-3', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', NULL, 'EDC001', NULL),
+('STK-MC006-4', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', NULL, 'EDC001', NULL),
+('STK-MC006-5', 'Samsung 16GB DDR5-5600 SO-DIMM', 'LIN002', 'MC006', NULL, 'EDC001', NULL),
+('STK-MC007-1', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', NULL, 'EDC001', NULL),
+('STK-MC007-2', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', NULL, 'EDC001', NULL),
+('STK-MC007-3', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', NULL, 'EDC001', NULL),
+('STK-MC007-4', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', NULL, 'EDC001', NULL),
+('STK-MC007-5', 'Micron 32GB DDR5-5600 SO-DIMM', 'LIN002', 'MC007', NULL, 'EDC001', NULL);
 
 -- LIN003 · EST-C1 Almacenamiento SSD
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC008-1', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC008-2', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC008-3', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC008-4', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC008-5', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC009-1', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC009-2', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC009-3', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC009-4', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC009-5', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC010-1', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC010-2', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC010-3', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC010-4', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC010-5', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC011-1', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC011-2', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC011-3', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC011-4', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC011-5', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC008-1', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('STK-MC008-2', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('STK-MC008-3', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('STK-MC008-4', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('STK-MC008-5', 'Samsung PM9A1 256GB NVMe M.2', 'LIN003', 'MC008', NULL, 'EDC001', NULL),
+('STK-MC009-1', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', NULL, 'EDC001', NULL),
+('STK-MC009-2', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', NULL, 'EDC001', NULL),
+('STK-MC009-3', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', NULL, 'EDC001', NULL),
+('STK-MC009-4', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', NULL, 'EDC001', NULL),
+('STK-MC009-5', 'Samsung PM9A1 512GB NVMe M.2', 'LIN003', 'MC009', NULL, 'EDC001', NULL),
+('STK-MC010-1', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', NULL, 'EDC001', NULL),
+('STK-MC010-2', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', NULL, 'EDC001', NULL),
+('STK-MC010-3', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', NULL, 'EDC001', NULL),
+('STK-MC010-4', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', NULL, 'EDC001', NULL),
+('STK-MC010-5', 'Samsung PM9A1 1TB NVMe M.2', 'LIN003', 'MC010', NULL, 'EDC001', NULL),
+('STK-MC011-1', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', NULL, 'EDC001', NULL),
+('STK-MC011-2', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', NULL, 'EDC001', NULL),
+('STK-MC011-3', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', NULL, 'EDC001', NULL),
+('STK-MC011-4', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', NULL, 'EDC001', NULL),
+('STK-MC011-5', 'Seagate FireCuda 2TB NVMe M.2', 'LIN003', 'MC011', NULL, 'EDC001', NULL);
 
 -- LIN003 · EST-C2 Tarjeta de Red
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC024-1', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC024-2', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC024-3', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC024-4', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC024-5', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC025-1', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC025-2', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC025-3', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC025-4', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC025-5', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC024-1', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('STK-MC024-2', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('STK-MC024-3', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('STK-MC024-4', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('STK-MC024-5', 'Intel Wi-Fi 6E AX211 M.2', 'LIN003', 'MC024', NULL, 'EDC001', NULL),
+('STK-MC025-1', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', NULL, 'EDC001', NULL),
+('STK-MC025-2', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', NULL, 'EDC001', NULL),
+('STK-MC025-3', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', NULL, 'EDC001', NULL),
+('STK-MC025-4', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', NULL, 'EDC001', NULL),
+('STK-MC025-5', 'Qualcomm FastConnect 6900 M.2', 'LIN003', 'MC025', NULL, 'EDC001', NULL);
 
 -- LIN003 · EST-C3 Disipador Térmico
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC026-1', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC026-2', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC026-3', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC026-4', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC026-5', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC027-1', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC027-2', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC027-3', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC027-4', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC027-5', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC026-1', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', NULL, 'EDC001', NULL),
+('STK-MC026-2', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', NULL, 'EDC001', NULL),
+('STK-MC026-3', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', NULL, 'EDC001', NULL),
+('STK-MC026-4', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', NULL, 'EDC001', NULL),
+('STK-MC026-5', 'Lenovo Thermal Module T14G5 AMD', 'LIN003', 'MC026', NULL, 'EDC001', NULL),
+('STK-MC027-1', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', NULL, 'EDC001', NULL),
+('STK-MC027-2', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', NULL, 'EDC001', NULL),
+('STK-MC027-3', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', NULL, 'EDC001', NULL),
+('STK-MC027-4', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', NULL, 'EDC001', NULL),
+('STK-MC027-5', 'Lenovo Thermal Module T14G5 Int', 'LIN003', 'MC027', NULL, 'EDC001', NULL);
 
 -- LIN004 · EST-D1 Módulo de Pantalla
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC014-1', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC014-2', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC014-3', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC014-4', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC014-5', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC015-1', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC015-2', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC015-3', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC015-4', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC015-5', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC016-1', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC016-2', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC016-3', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC016-4', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC016-5', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC022-1', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC022-2', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC022-3', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC022-4', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC022-5', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC023-1', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC023-2', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC023-3', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC023-4', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC023-5', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC014-1', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('STK-MC014-2', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('STK-MC014-3', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('STK-MC014-4', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('STK-MC014-5', 'BOE 14" FHD IPS 400nit', 'LIN004', 'MC014', NULL, 'EDC001', NULL),
+('STK-MC015-1', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', NULL, 'EDC001', NULL),
+('STK-MC015-2', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', NULL, 'EDC001', NULL),
+('STK-MC015-3', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', NULL, 'EDC001', NULL),
+('STK-MC015-4', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', NULL, 'EDC001', NULL),
+('STK-MC015-5', 'LG 14" WUXGA IPS Touch 400nit', 'LIN004', 'MC015', NULL, 'EDC001', NULL),
+('STK-MC016-1', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', NULL, 'EDC001', NULL),
+('STK-MC016-2', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', NULL, 'EDC001', NULL),
+('STK-MC016-3', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', NULL, 'EDC001', NULL),
+('STK-MC016-4', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', NULL, 'EDC001', NULL),
+('STK-MC016-5', 'BOE 14" 2.8K OLED 400nit', 'LIN004', 'MC016', NULL, 'EDC001', NULL),
+('STK-MC022-1', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', NULL, 'EDC001', NULL),
+('STK-MC022-2', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', NULL, 'EDC001', NULL),
+('STK-MC022-3', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', NULL, 'EDC001', NULL),
+('STK-MC022-4', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', NULL, 'EDC001', NULL),
+('STK-MC022-5', 'Chicony 1080p FHD IR+RGB', 'LIN004', 'MC022', NULL, 'EDC001', NULL),
+('STK-MC023-1', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', NULL, 'EDC001', NULL),
+('STK-MC023-2', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', NULL, 'EDC001', NULL),
+('STK-MC023-3', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', NULL, 'EDC001', NULL),
+('STK-MC023-4', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', NULL, 'EDC001', NULL),
+('STK-MC023-5', 'Chicony 5MP IR+RGB', 'LIN004', 'MC023', NULL, 'EDC001', NULL);
 
 -- LIN004 · EST-D4 Batería Principal
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC017-1', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC017-2', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC017-3', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC017-4', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC017-5', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC017-1', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', NULL, 'EDC001', NULL),
+('STK-MC017-2', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', NULL, 'EDC001', NULL),
+('STK-MC017-3', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', NULL, 'EDC001', NULL),
+('STK-MC017-4', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', NULL, 'EDC001', NULL),
+('STK-MC017-5', 'Lenovo 52.5Wh Li-Ion T14G5', 'LIN004', 'MC017', NULL, 'EDC001', NULL);
 
 -- LIN004 · EST-D5 Chasis Inferior
 INSERT INTO componente (num_serie, descripcion, linea, modelo, lote, estado, registro_ensamblaje) VALUES
-('STK-MC029-1', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC029-2', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC029-3', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', 'LCOMP-001', 'EDC001', NULL),
-('STK-MC029-4', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', 'LCOMP-002', 'EDC001', NULL),
-('STK-MC029-5', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', 'LCOMP-002', 'EDC001', NULL);
+('STK-MC029-1', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', NULL, 'EDC001', NULL),
+('STK-MC029-2', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', NULL, 'EDC001', NULL),
+('STK-MC029-3', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', NULL, 'EDC001', NULL),
+('STK-MC029-4', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', NULL, 'EDC001', NULL),
+('STK-MC029-5', 'Lenovo Bottom Cover T14G5', 'LIN004', 'MC029', NULL, 'EDC001', NULL);
 
 
 -- ============================================================
